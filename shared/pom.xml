@@ -1,0 +1,9 @@
+<project>
+    <parent>
+        <groupId>com.aa</groupId>
+        <artifactId>multiplayer-game</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>shared</artifactId>
+</project>
