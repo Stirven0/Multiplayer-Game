@@ -1,7 +1,7 @@
-package com.game.shared.state;
+package com.aa.shared.state;
 
-import com.game.shared.model.Player;
-import com.game.shared.model.Bullet;
+import com.aa.shared.model.Player;
+import com.aa.shared.model.Bullet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.game.shared.message;
+package com.aa.shared.message;
 
 /**
  * Mensaje de movimiento del jugador.

@@ -1,4 +1,4 @@
-package com.game.shared.model;
+package com.aa.shared.model;
 
 /**
  * Representa el estado de un jugador.

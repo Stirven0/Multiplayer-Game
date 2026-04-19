@@ -1,4 +1,4 @@
-package com.game.shared.model;
+package com.aa.shared.model;
 
 /**
  * Vector 2D inmutable para posiciones, direcciones y velocidades.

@@ -1,0 +1,9 @@
+# Normalizar finales de línea
+* text=auto eol=lf
+
+# Archivos binarios
+*.jar binary
+*.png binary
+*.jpg binary
+*.ogg binary
+*.wav binary

@@ -1,6 +1,7 @@
-package com.game.shared.util;
+package com.aa.shared.util;
 
-import com.game.shared.message.*;
+import com.aa.shared.message.*;
+import com.aa.shared.model.*;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
@@ -115,11 +116,11 @@ public class JsonUtil {
     /**
      * Adaptador para Vector2 (más compacto que objeto con fields).
      */
-    private static class Vector2Adapter implements JsonSerializer<com.game.shared.model.Vector2>, 
-                                                   JsonDeserializer<com.game.shared.model.Vector2> {
+    private static class Vector2Adapter implements JsonSerializer<com.aa.shared.model.Vector2>, 
+                                                   JsonDeserializer<com.aa.shared.model.Vector2> {
         
         @Override
-        public JsonElement serialize(com.game.shared.model.Vector2 src, Type typeOfSrc, 
+        public JsonElement serialize(com.aa.shared.model.Vector2 src, Type typeOfSrc, 
                                     JsonSerializationContext context) {
             JsonArray array = new JsonArray();
             array.add(src.x());
@@ -128,13 +129,13 @@ public class JsonUtil {
         }
         
         @Override
-        public com.game.shared.model.Vector2 deserialize(JsonElement json, Type typeOfT,
+        public com.aa.shared.model.Vector2 deserialize(JsonElement json, Type typeOfT,
                                                         JsonDeserializationContext context) 
                 throws JsonParseException {
             JsonArray array = json.getAsJsonArray();
             double x = array.get(0).getAsDouble();
             double y = array.get(1).getAsDouble();
-            return new com.game.shared.model.Vector2(x, y);
+            return new com.aa.shared.model.Vector2(x, y);
         }
     }
     

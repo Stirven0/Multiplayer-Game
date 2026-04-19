@@ -1,4 +1,4 @@
-package com.game.shared.message;
+package com.aa.shared.message;
 
 /**
  * Tipos de mensajes soportados en el protocolo.

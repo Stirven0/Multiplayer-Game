@@ -1,6 +1,6 @@
-package com.game.shared.message;
+package com.aa.shared.message;
 
-import com.game.shared.state.GameState;
+import com.aa.shared.state.GameState;
 
 /**
  * Mensaje que contiene el estado completo del juego.

@@ -1,4 +1,4 @@
-package com.game.shared.model;
+package com.aa.shared.model;
 
 /**
  * Representa una bala en el juego.
