@@ -56,6 +56,10 @@ public class GameInstance {
     public void queueInput(PlayerInput input) {
         inputQueue.offer(input);
     }
+		
+		public boolean hasPendingInputs() {
+			return !inputQueue.isEmpty();
+		}
 
     public boolean hasPlayer(String playerId) {
         return room.getPlayerIds().contains(playerId);
