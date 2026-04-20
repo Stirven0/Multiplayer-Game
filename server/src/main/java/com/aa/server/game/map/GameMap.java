@@ -1,8 +1,6 @@
 package com.aa.server.game.map;
 
 import com.aa.shared.model.Vector2;
-
-import java.util.Collections;
 import java.util.List;
 
 public class GameMap {

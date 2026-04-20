@@ -1,7 +1,6 @@
 package com.aa.server.room;
 
 import com.aa.server.game.GameInstanceManager;
-import com.aa.server.game.map.MapManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
