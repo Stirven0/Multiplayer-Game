@@ -14,6 +14,8 @@ public class GameLoop implements Runnable {
     public GameLoop(GameInstance instance) {
         this.instance = instance;
     }
+    
+    public boolean isRunning() { return running; }
 
     public void start() {
         running = true;
