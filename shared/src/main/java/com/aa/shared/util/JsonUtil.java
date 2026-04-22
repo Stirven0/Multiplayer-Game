@@ -11,12 +11,25 @@ import java.lang.reflect.Type;
  */
 public class JsonUtil {
     
+    // Gson simple: tiene Vector2Adapter pero NO MessageAdapter.
+    // Se usa para deserializar subclases concretas sin recursión.
+    private static final Gson gsonPlain;
+    
+    // Gson completo: con MessageAdapter para polimorfismo.
+    // Se usa para la API pública (serializar/deserializar genérico).
     private static final Gson gson;
     
     static {
+        // 1. Gson base con adapters de campo, SIN MessageAdapter
+        GsonBuilder plainBuilder = new GsonBuilder();
+        plainBuilder.serializeNulls();
+        plainBuilder.registerTypeAdapter(Vector2.class, new Vector2Adapter());
+        gsonPlain = plainBuilder.create();
+
+        // 2. Gson público: reutiliza gsonPlain internamente
         GsonBuilder builder = new GsonBuilder();
-        builder.setPrettyPrinting(); // Para debug, quitar en producción
-        builder.serializeNulls();    // Explicitamente incluir nulls
+        builder.setPrettyPrinting();
+        builder.serializeNulls();
         builder.registerTypeAdapter(Message.class, new MessageAdapter());
         builder.registerTypeAdapter(Vector2.class, new Vector2Adapter());
         gson = builder.create();
@@ -54,11 +67,11 @@ public class JsonUtil {
      * Deserializa con tipo específico para mejor performance.
      */
     public static MoveMessage parseMoveMessage(String json) {
-        return gson.fromJson(json, MoveMessage.class);
+        return gsonPlain.fromJson(json, MoveMessage.class);
     }
     
     public static GameStateMessage parseGameStateMessage(String json) {
-        return gson.fromJson(json, GameStateMessage.class);
+        return gsonPlain.fromJson(json, GameStateMessage.class);
     }
     
     // ==================== ADAPTADORES PERSONALIZADOS ====================
@@ -70,7 +83,7 @@ public class JsonUtil {
         
         @Override
         public JsonElement serialize(Message src, Type typeOfSrc, JsonSerializationContext context) {
-            JsonObject result = context.serialize(src, src.getClass()).getAsJsonObject();
+            JsonObject result = gsonPlain.toJsonTree(src, src.getClass()).getAsJsonObject();
             // Asegurar que el tipo esté presente
             if (!result.has("type")) {
                 result.addProperty("type", src.getType().name());
@@ -97,7 +110,7 @@ public class JsonUtil {
             
             // Deserializar según el tipo específico
             Class<? extends Message> targetClass = getTargetClass(type);
-            return context.deserialize(json, targetClass);
+            return gsonPlain.fromJson(json, targetClass);
         }
         
         private Class<? extends Message> getTargetClass(MessageType type) {
@@ -105,9 +118,12 @@ public class JsonUtil {
                 case MOVE_INPUT -> MoveMessage.class;
                 case SHOOT_INPUT -> ShootMessage.class;
                 case GAME_STATE -> GameStateMessage.class;
-                case LOGIN_REQUEST, LOGIN_RESPONSE -> LoginMessage.class;
+                case LOGIN_REQUEST -> LoginMessage.class;
                 case ERROR -> ErrorMessage.class;
-                default -> Message.class; // Fallback, puede necesitar ajuste
+                case PING -> PingMessage.class;
+                case PONG -> PongMessage.class;
+                case LOGIN_RESPONSE -> LoginResponseMessage.class;
+                default -> throw new JsonParseException("Tipo de mensaje no mapeado a clase concreta: " + type);
             };
         }
     }
@@ -115,11 +131,11 @@ public class JsonUtil {
     /**
      * Adaptador para Vector2 (más compacto que objeto con fields).
      */
-    private static class Vector2Adapter implements JsonSerializer<com.aa.shared.model.Vector2>, 
-                                                   JsonDeserializer<com.aa.shared.model.Vector2> {
+    private static class Vector2Adapter implements JsonSerializer<Vector2>, 
+                                                   JsonDeserializer<Vector2> {
         
         @Override
-        public JsonElement serialize(com.aa.shared.model.Vector2 src, Type typeOfSrc, 
+        public JsonElement serialize(Vector2 src, Type typeOfSrc, 
                                     JsonSerializationContext context) {
             JsonArray array = new JsonArray();
             array.add(src.x());
@@ -128,13 +144,13 @@ public class JsonUtil {
         }
         
         @Override
-        public com.aa.shared.model.Vector2 deserialize(JsonElement json, Type typeOfT,
+        public Vector2 deserialize(JsonElement json, Type typeOfT,
                                                         JsonDeserializationContext context) 
                 throws JsonParseException {
             JsonArray array = json.getAsJsonArray();
             double x = array.get(0).getAsDouble();
             double y = array.get(1).getAsDouble();
-            return new com.aa.shared.model.Vector2(x, y);
+            return new Vector2(x, y);
         }
     }
     

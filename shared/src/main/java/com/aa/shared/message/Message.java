@@ -24,7 +24,7 @@ public abstract class Message {
     
     // Getters y Setters
     public MessageType getType() { return type; }
-    protected void setType(MessageType type) { this.type = type; }
+    public void setType(MessageType type) { this.type = type; }
     
     public String getMessageId() { return messageId; }
     public void setMessageId(String messageId) { this.messageId = messageId; }

@@ -24,3 +24,17 @@ python tools/test_client.py
 
 python tools/load_test.py 5    # 5 jugadores
 python tools/load_test.py 20   # 20 jugadores (stress test)
+
+
+# Solo Shell
+
+import websocket, json
+
+ws = websocket.create_connection("ws://localhost:8080")
+print("Conectado")   # → dispara onOpen en el servidor
+
+ws.send(json.dumps({"type": "PING"}))
+print("Mensaje enviado")  # → dispara onMessage en el servidor
+
+ws.close()
+print("Conexión cerrada") # → dispara onClose en el servidor

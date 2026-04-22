@@ -69,20 +69,26 @@ public class MessageHandler {
     }
 
     private void handleLogin(ClientConnection client, String json) {
-        LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
-        String token = authService.login(msg.getUsername(), msg.getPassword());
-        if (token != null) {
-            String userId = authService.getUserId(token);
-            client.setUserId(userId);
-            connectionManager.authenticate(client.getConnectionId(), userId);
-
-            LoginMessage response = new LoginMessage();
-            response.setToken(token);
-            client.send(response);
-        } else {
-            client.sendError("AUTH_FAILED", "Invalid username or password", false);
-        }
+    LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
+    String token = authService.login(msg.getUsername(), msg.getPassword());
+    
+    if (token != null) {
+        String userId = authService.getUserId(token);
+        client.setUserId(userId);
+        connectionManager.authenticate(client.getConnectionId(), userId);
+        
+        // Crear respuesta de login
+        LoginMessage response = new LoginMessage();
+        response.setType(MessageType.LOGIN_RESPONSE); // ¡Importante cambiar el tipo!
+        response.setToken(token);
+        response.setUsername(msg.getUsername());
+        
+        client.send(response);
+        System.out.println("[AUTH] Login exitoso: " + msg.getUsername() + " -> " + userId);
+    } else {
+        client.sendError("AUTH_FAILED", "Invalid username or password", false);
     }
+}
 
     private void handleCreateRoom(ClientConnection client, String json) {
         // Parseo manual del mapId (puedes crear una clase CreateRoomMessage en shared)

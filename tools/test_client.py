@@ -165,7 +165,7 @@ def interactive_shell():
     """Shell interactivo para testing manual"""
     client = GameTestClient()
     
-    print("""
+    help = """
     ╔═══════════════════════════════════════╗
     ║  TEST CLIENT - Multiplayer Shooter    ║
     ╚═══════════════════════════════════════╝
@@ -180,7 +180,8 @@ def interactive_shell():
       spam                       - Spam de movimiento (test carga)
       auto                       - Bot simple que se mueve y dispara
       quit                       - Salir
-    """)
+    """
+
     
     while True:
         try:
@@ -249,7 +250,7 @@ def interactive_shell():
                     print("\n[+] Bot detenido")
                     
             else:
-                print(f"Comando desconocido: {action}")
+                print(f"Comando desconocido: {action}\n{help}")
                 
         except KeyboardInterrupt:
             break
