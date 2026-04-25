@@ -10,18 +10,24 @@ import com.aa.server.room.Room;
 import com.aa.server.room.RoomManager;
 import com.aa.shared.message.*;
 import com.aa.shared.util.JsonUtil;
+import java.util.ArrayList;
 
 /**
  * Router central. Deserializa y delega. Ninguna lógica de negocio aquí, solo enrutado y validación básica.
  */
 public class MessageHandler {
+
     private final AuthService authService;
     private final RoomManager roomManager;
     private final GameInstanceManager gameInstanceManager;
     private final ConnectionManager connectionManager;
 
-    public MessageHandler(AuthService authService, RoomManager roomManager,
-                          GameInstanceManager gameInstanceManager, ConnectionManager connectionManager) {
+    public MessageHandler(
+        AuthService authService,
+        RoomManager roomManager,
+        GameInstanceManager gameInstanceManager,
+        ConnectionManager connectionManager
+    ) {
         this.authService = authService;
         this.roomManager = roomManager;
         this.gameInstanceManager = gameInstanceManager;
@@ -32,7 +38,11 @@ public class MessageHandler {
         try {
             String typeStr = JsonUtil.extractField(json, "type");
             if (typeStr == null) {
-                client.sendError("MISSING_TYPE", "Field 'type' is required", false);
+                client.sendError(
+                    "MISSING_TYPE",
+                    "Field 'type' is required",
+                    false
+                );
                 return;
             }
 
@@ -43,7 +53,6 @@ public class MessageHandler {
                 case LOGIN_REQUEST -> handleLogin(client, json);
                 default -> handleAuthenticated(client, json, type);
             }
-
         } catch (IllegalArgumentException e) {
             client.sendError("INVALID_TYPE", "Unknown message type", false);
         } catch (Exception e) {
@@ -52,7 +61,11 @@ public class MessageHandler {
         }
     }
 
-    private void handleAuthenticated(ClientConnection client, String json, MessageType type) {
+    private void handleAuthenticated(
+        ClientConnection client,
+        String json,
+        MessageType type
+    ) {
         if (!client.isAuthenticated()) {
             client.sendError("NOT_AUTHENTICATED", "Login required", false);
             return;
@@ -64,38 +77,75 @@ public class MessageHandler {
             case GAME_START -> handleStartGame(client, json);
             case MOVE_INPUT -> handleMove(client, json);
             case SHOOT_INPUT -> handleShoot(client, json);
-            default -> client.sendError("UNHANDLED", "Message type not implemented: " + type, false);
+            case PING, PONG -> {
+                /* heartbeat, no hacer nada */
+            }
+            default -> {
+                // Solo loggear, no enviar error al cliente por mensajes desconocidos
+                System.out.println("[HANDLER] Mensaje no manejado: " + type);
+            }
         }
     }
 
     private void handleLogin(ClientConnection client, String json) {
-    LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
-    String token = authService.login(msg.getUsername(), msg.getPassword());
-    
-    if (token != null) {
-        String userId = authService.getUserId(token);
-        client.setUserId(userId);
-        connectionManager.authenticate(client.getConnectionId(), userId);
-        
-        // Crear respuesta de login
-        LoginMessage response = new LoginMessage();
-        response.setType(MessageType.LOGIN_RESPONSE); // ¡Importante cambiar el tipo!
-        response.setToken(token);
-        response.setUsername(msg.getUsername());
-        
-        client.send(response);
-        System.out.println("[AUTH] Login exitoso: " + msg.getUsername() + " -> " + userId);
-    } else {
-        client.sendError("AUTH_FAILED", "Invalid username or password", false);
+        LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
+        String token = authService.login(msg.getUsername(), msg.getPassword());
+
+        if (token != null) {
+            String userId = authService.getUserId(token);
+            client.setUserId(userId);
+            connectionManager.authenticate(client.getConnectionId(), userId);
+
+            // Crear respuesta de login
+            // LoginMessage response = new LoginMessage();
+            // response.setType(MessageType.LOGIN_RESPONSE); // ¡Importante cambiar el tipo!
+            // response.setToken(token);
+            // response.setUsername(msg.getUsername());
+
+            LoginResponseMessage response = new LoginResponseMessage();
+            response.setToken(token);
+            response.setUserId(userId); // <-- ESTO FALTABA
+            response.setUsername(msg.getUsername());
+
+            client.send(response);
+            System.out.println(
+                "[AUTH] Login exitoso: " + msg.getUsername() + " -> " + userId
+            );
+        } else {
+            client.sendError(
+                "AUTH_FAILED",
+                "Invalid username or password",
+                false
+            );
+        }
     }
-}
 
     private void handleCreateRoom(ClientConnection client, String json) {
-        // Parseo manual del mapId (puedes crear una clase CreateRoomMessage en shared)
         String mapId = extractStringField(json, "mapId", "map_01");
         Room room = roomManager.createRoom(client.getPlayerId(), mapId);
         client.setCurrentRoomId(room.getRoomId());
-        client.send(JsonUtil.fromJson("{\"type\":\"ROOM_CREATED\",\"roomId\":\"" + room.getRoomId() + "\"}", Message.class));
+
+        // Enviar respuesta formal
+        RoomCreatedMessage response = new RoomCreatedMessage();
+        response.setRoomId(room.getRoomId());
+        response.setHostId(room.getHostId());
+        response.setMapId(room.getMapId());
+        client.send(response);
+
+        // Notificar a otros (si hubiera)
+        broadcastRoomUpdate(room);
+    }
+
+    private void broadcastRoomUpdate(Room room) {
+        RoomUpdatedMessage update = new RoomUpdatedMessage();
+        update.setRoomId(room.getRoomId());
+        update.setPlayerIds(new ArrayList<>(room.getPlayerIds()));
+        update.setStatus(room.getStatus().name());
+
+        for (String pid : room.getPlayerIds()) {
+            ClientConnection c = connectionManager.getByPlayerId(pid);
+            if (c != null) c.send(update);
+        }
     }
 
     private void handleJoinRoom(ClientConnection client, String json) {
@@ -127,18 +177,24 @@ public class MessageHandler {
     }
 
     private void handleMove(ClientConnection client, String json) {
-        GameInstance game = gameInstanceManager.getGameByPlayer(client.getPlayerId());
+        GameInstance game = gameInstanceManager.getGameByPlayer(
+            client.getPlayerId()
+        );
         if (game == null) {
             client.sendError("NOT_IN_GAME", "Not in an active game", false);
             return;
         }
         MoveMessage msg = JsonUtil.fromJson(json, MoveMessage.class);
         msg.normalize(); // Sanitiza vector
-        game.queueInput(new PlayerInput(client.getPlayerId(), MessageType.MOVE_INPUT, msg));
+        game.queueInput(
+            new PlayerInput(client.getPlayerId(), MessageType.MOVE_INPUT, msg)
+        );
     }
 
     private void handleShoot(ClientConnection client, String json) {
-        GameInstance game = gameInstanceManager.getGameByPlayer(client.getPlayerId());
+        GameInstance game = gameInstanceManager.getGameByPlayer(
+            client.getPlayerId()
+        );
         if (game == null) {
             client.sendError("NOT_IN_GAME", "Not in an active game", false);
             return;
@@ -148,10 +204,16 @@ public class MessageHandler {
             return;
         }
         ShootMessage msg = JsonUtil.fromJson(json, ShootMessage.class);
-        game.queueInput(new PlayerInput(client.getPlayerId(), MessageType.SHOOT_INPUT, msg));
+        game.queueInput(
+            new PlayerInput(client.getPlayerId(), MessageType.SHOOT_INPUT, msg)
+        );
     }
 
-    private String extractStringField(String json, String field, String defaultValue) {
+    private String extractStringField(
+        String json,
+        String field,
+        String defaultValue
+    ) {
         try {
             com.google.gson.JsonObject obj = JsonUtil.parseToObject(json);
             return obj.has(field) ? obj.get(field).getAsString() : defaultValue;

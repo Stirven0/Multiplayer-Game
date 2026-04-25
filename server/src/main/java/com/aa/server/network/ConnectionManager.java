@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConnectionManager {
     private final ConcurrentHashMap<String, ClientConnection> byConnectionId = new ConcurrentHashMap<>();
-    // private final ConcurrentHashMap<String, ClientConnection> byPlayerId = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ClientConnection> byPlayerId = new ConcurrentHashMap<>();
 
     public void register(WebSocket socket) {
         ClientConnection conn = new ClientConnection(socket);
@@ -25,14 +25,14 @@ public class ConnectionManager {
         if (conn != null) {
             conn.setPlayerId(playerId);
             conn.setAuthenticated(true);
-            // byPlayerId.put(playerId, conn);
+            byPlayerId.put(playerId, conn);
         }
     }
 
     public void remove(String connectionId) {
         ClientConnection conn = byConnectionId.remove(connectionId);
         if (conn != null && conn.getPlayerId() != null) {
-            // byPlayerId.remove(conn.getPlayerId());
+            byPlayerId.remove(conn.getPlayerId());
         }
     }
 
@@ -40,27 +40,27 @@ public class ConnectionManager {
         return byConnectionId.get(id);
     }
 
-    // public ClientConnection getByPlayerId(String id) {
-    //     // return byPlayerId.get(id);
-    // }
+    public ClientConnection getByPlayerId(String id) {
+        return byPlayerId.get(id);
+    }
 
     public void broadcastToPlayers(Collection<String> playerIds, String json) {
         for (String pid : playerIds) {
-            // ClientConnection c = byPlayerId.get(pid);
-            // if (c != null && c.isOpen()) {
-            //     c.send(JsonUtil.fromJson(json, Message.class)); // Re-serialización temporal, mejor usar sendRaw
-            // }
+            ClientConnection c = byPlayerId.get(pid);
+            if (c != null && c.isOpen()) {
+                c.send(JsonUtil.fromJson(json, Message.class)); // Re-serialización temporal, mejor usar sendRaw
+            }
         }
     }
 
     public void broadcastToPlayers(Collection<String> playerIds, Message message) {
         String json = JsonUtil.toJson(message);
         for (String pid : playerIds) {
-            // ClientConnection c = byPlayerId.get(pid);
-            // if (c != null && c.isOpen()) {
-            //     // Envío directo evitando doble serialización
-            //     c.send(message);
-            // }
+            ClientConnection c = byPlayerId.get(pid);
+            if (c != null && c.isOpen()) {
+                // Envío directo evitando doble serialización
+                c.send(message);
+            }
         }
     }
     public Collection<ClientConnection> getAll() {

@@ -15,7 +15,10 @@ public enum MessageType {
     JOIN_ROOM,
     LEAVE_ROOM,
     ROOM_LIST,
+    ROOM_CREATED,      // <-- NUEVO
+    ROOM_UPDATED,      // <-- NUEVO
     ROOM_UPDATE,
+    JOIN_ROOM_RESPONSE,// <-- NUEVO
     GAME_START,
     
     // Inputs del jugador (Cliente → Servidor)

@@ -5,8 +5,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class ScreenManager {
+
     private Stage stage;
-    private final GameClient gameClient;
+    private GameClient gameClient;
+    private LobbyScreen lobbyScreen;
 
     public ScreenManager() {
         this.gameClient = new GameClient(this);
@@ -14,17 +16,23 @@ public class ScreenManager {
 
     public void init(Stage stage) {
         this.stage = stage;
+        this.gameClient = new GameClient(this);
         stage.setTitle(com.aa.client.util.ClientConfig.TITLE);
         showLogin();
         stage.show();
     }
 
-    public void showLogin() {
-        stage.setScene(new LoginScreen(gameClient).createScene());
+    public void showLobby() {
+        this.lobbyScreen = new LobbyScreen(gameClient);
+        stage.setScene(lobbyScreen.createScene());
     }
 
-    public void showLobby() {
-        stage.setScene(new LobbyScreen(gameClient).createScene());
+    public LobbyScreen getLobbyScreen() {
+        return lobbyScreen;
+    }
+
+    public void showLogin() {
+        stage.setScene(new LoginScreen(gameClient).createScene());
     }
 
     public void showGame() {

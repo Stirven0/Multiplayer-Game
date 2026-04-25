@@ -11,27 +11,39 @@ import com.aa.shared.message.*;
 import com.aa.shared.model.Player;
 import com.aa.shared.state.GameState;
 import com.google.gson.JsonObject;
+import java.net.URI;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
 
-import java.net.URI;
-
 public class GameClient implements ClientMessageListener {
+
     private final NetworkClient network;
     private final GameClientState state;
     private final InputHandler inputHandler;
     private final Renderer renderer;
     private final Camera camera;
     private final ScreenManager screenManager;
+    private volatile String currentRoomId;
     private volatile boolean connected = false;
 
     public GameClient(ScreenManager screenManager) {
         this.screenManager = screenManager;
         this.state = new GameClientState();
-        this.network = new NetworkClient(URI.create(ClientConfig.SERVER_URL), this);
+        this.network = new NetworkClient(
+            URI.create(ClientConfig.SERVER_URL),
+            this
+        );
         this.inputHandler = new InputHandler();
         this.camera = new Camera(ClientConfig.WIDTH, ClientConfig.HEIGHT);
         this.renderer = new Renderer(camera);
+    }
+
+    public String getCurrentRoomId() {
+        return currentRoomId;
+    }
+
+    public void setCurrentRoomId(String roomId) {
+        this.currentRoomId = roomId;
     }
 
     /**
@@ -40,7 +52,9 @@ public class GameClient implements ClientMessageListener {
      */
     public boolean connect() {
         try {
-            System.out.println("[CLIENT] Conectando a " + ClientConfig.SERVER_URL);
+            System.out.println(
+                "[CLIENT] Conectando a " + ClientConfig.SERVER_URL
+            );
             boolean ok = network.connectBlocking(5000);
             if (ok) {
                 System.out.println("[CLIENT] Conectado exitosamente");
@@ -147,8 +161,39 @@ public class GameClient implements ClientMessageListener {
             case LOGIN_RESPONSE -> {
                 LoginResponseMessage resp = (LoginResponseMessage) msg; // Necesitas crear esta clase
                 state.setLocalPlayerId(resp.getUserId());
-                System.out.println("[CLIENT] Login exitoso, userId: " + resp.getUserId());
+                System.out.println(
+                    "[CLIENT] Login exitoso, userId: " + resp.getUserId()
+                );
                 screenManager.showLobby();
+            }
+            case ROOM_CREATED -> {
+                RoomCreatedMessage rcm = (RoomCreatedMessage) msg;
+                this.currentRoomId = rcm.getRoomId();
+                System.out.println("[CLIENT] Sala creada: " + rcm.getRoomId());
+                // Actualizar UI si está disponible
+                if (screenManager.getLobbyScreen() != null) {
+                    screenManager
+                        .getLobbyScreen()
+                        .updateRoomInfo(rcm.getRoomId());
+                }
+            }
+            case ROOM_UPDATED -> {
+                RoomUpdatedMessage rum = (RoomUpdatedMessage) msg;
+                System.out.println(
+                    "[CLIENT] Sala actualizada: " + rum.getPlayerIds()
+                );
+            }
+            case JOIN_ROOM_RESPONSE -> {
+                JoinRoomResponseMessage jrm = (JoinRoomResponseMessage) msg;
+                if (jrm.isSuccess()) {
+                    System.out.println(
+                        "[CLIENT] Unido a sala: " + jrm.getRoomId()
+                    );
+                } else {
+                    System.err.println(
+                        "[CLIENT] Error al unirse: " + jrm.getMessage()
+                    );
+                }
             }
             case GAME_STATE -> {
                 GameStateMessage gsm = (GameStateMessage) msg;
@@ -158,12 +203,20 @@ public class GameClient implements ClientMessageListener {
                     screenManager.showGame();
                 }
             }
+            case PING -> {
+                // Ignorar o responder PONG si quieres medir latencia
+                // network.sendMessage(new PongMessage());
+            }
             case ERROR -> {
                 ErrorMessage err = (ErrorMessage) msg;
-                System.err.println("[CLIENT] Server error: " + err.getMessage());
+                System.err.println(
+                    "[CLIENT] Server error: " + err.getMessage()
+                );
             }
             default -> {
-                System.out.println("[CLIENT] Mensaje no manejado: " + msg.getType());
+                System.out.println(
+                    "[CLIENT] Mensaje no manejado: " + msg.getType()
+                );
             }
         }
     }
