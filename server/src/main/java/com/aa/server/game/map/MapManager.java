@@ -11,16 +11,14 @@ public class MapManager {
     }
 
     private void loadDefaults() {
-        GameMap defaultMap = new GameMap(
-            "map_01",
-            2000, 2000,
-            java.util.List.of(
-                new Obstacle(400, 400, 300, 100),
-                new Obstacle(900, 800, 100, 300),
-                new Obstacle(1200, 1200, 400, 400)
-            )
-        );
-        maps.put(defaultMap.mapId(), defaultMap);
+        // Cargar desde JSON en vez de hardcodear
+        register(MapLoader.loadFromJson("/maps/map_01.json"));
+        register(MapLoader.loadFromJson("/maps/map_02.json"));
+        register(MapLoader.loadFromJson("/maps/map_03.json"));
+    }
+
+    private void register(GameMap map) {
+        maps.put(map.mapId(), map);
     }
 
     public GameMap getMap(String mapId) {
@@ -29,5 +27,9 @@ public class MapManager {
 
     public GameMap getDefaultMap() {
         return maps.get("map_01");
+    }
+
+    public Map<String, GameMap> getAllMaps() {
+        return Map.copyOf(maps);
     }
 }

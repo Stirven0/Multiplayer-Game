@@ -1,5 +1,6 @@
 package com.aa.client.game;
 
+import com.aa.client.asset.AudioManager;
 import com.aa.client.input.InputHandler;
 import com.aa.client.network.ClientMessageListener;
 import com.aa.client.network.NetworkClient;
@@ -201,6 +202,9 @@ public class GameClient implements ClientMessageListener {
                 if (!state.isInGame()) {
                     state.setInGame(true);
                     screenManager.showGame();
+                    AudioManager.stopMusic();
+                    AudioManager.playMusic("music/battle_theme_01.mp3");
+
                 }
             }
             case PING -> {
@@ -212,6 +216,9 @@ public class GameClient implements ClientMessageListener {
                 System.err.println(
                     "[CLIENT] Server error: " + err.getMessage()
                 );
+            }
+            case PLAYER_HIT -> {
+                AudioManager.playHit();
             }
             default -> {
                 System.out.println(

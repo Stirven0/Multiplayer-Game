@@ -34,13 +34,9 @@ public class Renderer {
         }
 
         // Dibujar balas
-        gc.setFill(SpriteManager.getBulletColor());
         for (Bullet b : state.getAllBullets()) {
-            double sx = camera.worldToScreenX(b.getPosition().x());
-            double sy = camera.worldToScreenY(b.getPosition().y());
-            gc.fillOval(sx - 3, sy - 3, 6, 6);
+            drawBullet(gc, b);
         }
-
         // HUD
         drawHud(gc, state, localPlayerId);
     }
@@ -64,10 +60,9 @@ public class Renderer {
     private void drawPlayer(GraphicsContext gc, Player p, boolean isLocal) {
         double sx = camera.worldToScreenX(p.getPosition().x());
         double sy = camera.worldToScreenY(p.getPosition().y());
+        double size = 32;
 
-        // Cuerpo
-        double size = 24;
-        Image sprite = SpriteManager.getPlayerSprite();
+        Image sprite = SpriteManager.getPlayerSprite(isLocal, p.isAlive());
         if (sprite != null) {
             gc.drawImage(sprite, sx - size/2, sy - size/2, size, size);
         } else {
@@ -100,6 +95,18 @@ public class Renderer {
         }
     }
 
+    private void drawBullet(GraphicsContext gc, Bullet b) {
+    double sx = camera.worldToScreenX(b.getPosition().x());
+    double sy = camera.worldToScreenY(b.getPosition().y());
+    
+    Image sprite = SpriteManager.getBulletSprite();
+    if (sprite != null) {
+        gc.drawImage(sprite, sx - 4, sy - 4, 8, 8);
+    } else {
+        gc.setFill(SpriteManager.getBulletColor());
+        gc.fillOval(sx - 3, sy - 3, 6, 6);
+    }
+}
     private void drawHud(GraphicsContext gc, GameState state, String localPlayerId) {
         Player local = state.getPlayer(localPlayerId);
         if (local == null) return;

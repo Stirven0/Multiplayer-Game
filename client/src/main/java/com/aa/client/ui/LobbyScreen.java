@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -13,6 +14,7 @@ public class LobbyScreen {
 
     private final GameClient gameClient;
     private Label roomInfoLabel;
+    private ComboBox<String> mapSelector;
 
     public LobbyScreen(GameClient gameClient) {
         this.gameClient = gameClient;
@@ -29,9 +31,16 @@ public class LobbyScreen {
         roomInfoLabel = new Label("No estás en ninguna sala");
         roomInfoLabel.setStyle("-fx-text-fill: #aaa;");
 
+        
+        // Selector de mapa
+        mapSelector = new ComboBox<>();
+        mapSelector.getItems().addAll("map_01", "map_02", "map_03");
+        mapSelector.setValue("map_01");
+
         Button createBtn = new Button("Create Room");
         createBtn.setOnAction(e -> {
-            gameClient.createRoom("map_1");
+            String selectedMap = mapSelector.getValue();
+            gameClient.createRoom(selectedMap);
             createBtn.setDisable(true); // evitar doble click
         });
 
@@ -66,6 +75,7 @@ public class LobbyScreen {
                 title,
                 roomInfoLabel,
                 createBtn,
+                mapSelector,
                 roomId,
                 useMyRoomBtn,
                 joinBtn,

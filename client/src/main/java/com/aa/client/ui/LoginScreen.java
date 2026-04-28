@@ -1,5 +1,6 @@
 package com.aa.client.ui;
 
+import com.aa.client.asset.AudioManager;
 import com.aa.client.game.GameClient;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -40,6 +41,7 @@ public class LoginScreen {
         Button btn = new Button("Connect & Login");
         btn.setOnAction(e -> {
             btn.setDisable(true);
+            AudioManager.playClick();
             status.setText("Conectando...");
 
             // Ejecutar en hilo background para no bloquear JavaFX
