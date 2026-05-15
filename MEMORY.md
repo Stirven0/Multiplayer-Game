@@ -1,58 +1,47 @@
 # MEMORY.md — Punto de control del proyecto
 
-## Última sesión: FASE 3 completada (Mayo 13 2026)
+## Sesión actual: FASE 4 (UI/UX) + Documentación (Mayo 14 2026)
 
-## Estado actual
-- **Rama**: `opencode`
-- **Build**: `mvn clean package -DskipTests` → BUILD SUCCESS
-- **Tests**: 48/58 pasan, 10 fallos pre-existentes sin cambios — sin regresiones
-- **Servidor**: Funcionando en `:8080`, verificado
-- **Cliente**: Compila OK
+## Estado
+- **Rama**: `develop`
+- **Build**: `mvn clean install -DskipTests` → BUILD SUCCESS
+- **Tests servidor**: 58/58 pasan (0 failures, 0 errors)
+- **Tests UI cliente**: 21/21 pasan (0 failures, 0 errors)
+- **Servidor** y **Cliente** compilan y ejecutan correctamente.
 
 ## Cambios aplicados
 
-### FASE 0 — Bugfixes de mapas y login
-### FASE 1 — Colisiones con mapa
-### FASE 2 — Fin de partida y scoreboard
+### FASE 0 — Bugfixes (mapas, login, game flow)
+### FASE 1 — Colisiones jugador-obstáculo
+### FASE 2 — Fin de partida + scoreboard
+### FASE 3 — Reconexión básica + timeout checker
 
-### FASE 3 — Reconexión básica (NUEVO)
+### FASE 4 — UI/UX (completada)
+- Obstacles en GameState, renderizado en cliente
+- Cámara con límites de mapa, crosshair
+- Scoreboard en HUD (K/D, ordenado por kills)
+- Pantallas: Login rediseñado, Lobby con sala propia + salas disponibles
+- Barrra de título personalizada (TitleBar)
+- Overlay de pausa, ayuda, ajustes
+- Debug overlay (F3): FPS, tick, hitboxes
+- Ajustes: pantalla completa, volumen general/efectos/música
+- Idle kick: 30s → cuenta regresiva 10s → expulsión
+- Fullscreen: canvas + cámara se redimensionan
+- Arreglado ghost abandonar partida (markPlayerDisconnected en LEAVE_ROOM)
+- Race condition: disconnect/reconnect encolados en ConcurrentLinkedQueue
 
-| Archivo | Cambio |
-|---|---|
-| `server/ClientConnection.java` | +`lastActivityTimestamp` (init en constructor), +`updateActivity()`, +`isTimedOut(long)` |
-| `server/ServerConfig.java` | +`CONNECTION_TIMEOUT_MS=30_000`, +`TIMEOUT_CHECK_INTERVAL_MS=10_000` |
-| `server/GameServer.java` | `onClose()`: tras `connectionManager.remove()`, llama `gameInstanceManager.handleDisconnect(playerId)` si estaba jugando; `onMessage()`: llama `client.updateActivity()`; `onStart()`: arranca `startTimeoutChecker()` |
-| `server/GameInstanceManager.java` | +`handleDisconnect(playerId)`: busca game instance y llama `markPlayerDisconnected()` |
-| `server/GameInstance.java` | +`markPlayerDisconnected()`: remueve inputs encolados, marca jugador como muerto; `randomSpawn()` ahora es `public` |
-| `shared/MessageType.java` | +`RECONNECT` |
-| `shared/ReconnectMessage.java` | **NUEVO**: contiene `userId` + `token` |
-| `shared/JsonUtil.java` | `getTargetClass()` → `RECONNECT` mapea a `ReconnectMessage.class` |
-| `server/MessageHandler.java` | `handle()`: trata `RECONNECT` como ruta pública (sin auth). +`handleReconnect()`: valida token, re-autentica conexión, si hay partida activa respawnea al jugador |
+### Documentación (completada)
+- Javadoc en español en 15 clases principales
+- README.md general del proyecto
+- AGENTS.md actualizado
+- .gitattributes, .env.example creados
+- Licencia MIT
 
-## Próxima sesión: FASE 5 — Documentación
+### Tests UI (nuevos)
+- LoginScreenTest (9 tests): título, campos, toggle modo registro, ayuda, error
+- GameOverScreenTest (7 tests): winner, scoreboard, draw, botón volver
+- TitleBarTest (5 tests): título, cerrar, minimizar
+- Infraestructura: TestFX 4.0.18 + JUnit 5 + Mockito, headless via Xvfb
 
-### Tareas pendientes
-
-#### FASE 5: Documentación
-1. README.md, diagramas Mermaid, manual de usuario, informe técnico
-2. Actualizar AGENTS.md
-
-### FASE 4 — Mejoras UI/UX (Completada)
-
-| Archivo | Cambio |
-|---|---|
-| `shared/model/Obstacle.java` | **MOVIDO** desde `server/game/map/` a `shared/model/` — ahora es parte del módulo shared para que el cliente pueda usarlo |
-| `server/map/GameMap.java` | Import actualizado a `com.aa.shared.model.Obstacle` |
-| `server/map/MapLoader.java` | Import actualizado |
-| `server/game/GameInstance.java` | `GameState` ahora recibe `obstacles`, `mapWidth`, `mapHeight` del `GameMap` |
-| `shared/state/GameState.java` | +`List<Obstacle> obstacles`, +`mapWidth`, +`mapHeight`, incluidos en `copy()` |
-| `client/render/Renderer.java` | +`drawObstacles()` (rectángulos grises con borde), +`drawCrosshair()` (sprite o líneas), `drawHud()` ahora es scoreboard completo (esquina superior derecha, ordenado por kills, con K/D), `render()` acepta `mouseScreenX/mouseScreenY` |
-| `client/input/InputHandler.java` | +`getMouseScreenX()`, +`getMouseScreenY()` |
-| `client/game/GameClient.java` | `render()` pasa coordenadas del mouse; `update()` setea bounds de cámara desde GameState; +`leaveRoom()`; `ROOM_UPDATED` ahora actualiza lobby |
-| `client/render/Camera.java` | +`setBounds(mapW, mapH)`, `follow()` clampea a límites del mapa |
-| `client/ui/LobbyScreen.java` | +`ListView<String>` para jugadores, +`updatePlayerList()`, +botón "Leave Room" |
-| `server/handler/MessageHandler.java` | `handleJoinRoom()` ahora hace `broadcastRoomUpdate()`, +`handleLeaveRoom()`, ruteo de `LEAVE_ROOM` |
-
-## Archivos clave para la FASE 5
-- Raíz del proyecto: README.md
-- docs/ — diagramas, manual, informe
+## Pendiente
+- Revisar FASE 5 si aplica (no planificada)

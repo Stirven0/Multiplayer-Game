@@ -14,7 +14,10 @@ import com.aa.shared.util.JsonUtil;
 import java.util.ArrayList;
 
 /**
- * Router central. Deserializa y delega. Ninguna lógica de negocio aquí, solo enrutado y validación básica.
+ * Router central de mensajes del servidor.
+ * Deserializa los mensajes JSON entrantes y delega en los métodos
+ * de manejo correspondientes según el tipo de mensaje.
+ * No contiene lógica de negocio, solo enrutado y validación básica.
  */
 public class MessageHandler {
 
@@ -23,6 +26,13 @@ public class MessageHandler {
     private final GameInstanceManager gameInstanceManager;
     private final ConnectionManager connectionManager;
 
+    /**
+     * Construye el manejador con las dependencias necesarias.
+     * @param authService servicio de autenticación
+     * @param roomManager gestor de salas
+     * @param gameInstanceManager gestor de instancias de partida
+     * @param connectionManager gestor de conexiones de clientes
+     */
     public MessageHandler(
         AuthService authService,
         RoomManager roomManager,
@@ -35,6 +45,13 @@ public class MessageHandler {
         this.connectionManager = connectionManager;
     }
 
+    /**
+     * Procesa un mensaje JSON entrante de un cliente.
+     * Extrae el campo "type" y enruta al manejador adecuado.
+     * Las rutas públicas (login, reconexión) no requieren autenticación.
+     * @param client conexión del cliente que envió el mensaje
+     * @param json cuerpo del mensaje en JSON
+     */
     public void handle(ClientConnection client, String json) {
         try {
             String typeStr = JsonUtil.extractField(json, "type");
@@ -63,6 +80,10 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * Enruta mensajes que requieren autenticación.
+     * Si el cliente no está autenticado, envía un error.
+     */
     private void handleAuthenticated(
         ClientConnection client,
         String json,
@@ -85,12 +106,12 @@ public class MessageHandler {
                 /* heartbeat, no hacer nada */
             }
             default -> {
-                // Solo loggear, no enviar error al cliente por mensajes desconocidos
                 System.out.println("[HANDLER] Mensaje no manejado: " + type);
             }
         }
     }
 
+    /** Procesa solicitudes de login y registro de usuarios. */
     private void handleLogin(ClientConnection client, String json) {
         LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
         LoginResponseMessage response = new LoginResponseMessage();
@@ -143,22 +164,22 @@ public class MessageHandler {
         client.send(response);
     }
 
+    /** Crea una nueva sala y notifica a los miembros. */
     private void handleCreateRoom(ClientConnection client, String json) {
         String mapId = extractStringField(json, "mapId", "map_01");
         Room room = roomManager.createRoom(client.getPlayerId(), mapId);
         client.setCurrentRoomId(room.getRoomId());
 
-        // Enviar respuesta formal
         RoomCreatedMessage response = new RoomCreatedMessage();
         response.setRoomId(room.getRoomId());
         response.setHostId(room.getHostId());
         response.setMapId(room.getMapId());
         client.send(response);
 
-        // Notificar a otros (si hubiera)
         broadcastRoomUpdate(room);
     }
 
+    /** Notifica a todos los jugadores de una sala sobre cambios en la misma. */
     private void broadcastRoomUpdate(Room room) {
         RoomUpdatedMessage update = new RoomUpdatedMessage();
         update.setRoomId(room.getRoomId());
@@ -171,6 +192,7 @@ public class MessageHandler {
         }
     }
 
+    /** Procesa solicitudes de unión a una sala. */
     private void handleJoinRoom(ClientConnection client, String json) {
         String roomId = extractStringField(json, "roomId", null);
         if (roomId == null) {
@@ -187,6 +209,7 @@ public class MessageHandler {
         }
     }
 
+    /** Envía al cliente la lista de salas disponibles. */
     private void handleRoomList(ClientConnection client) {
         java.util.List<RoomListResponseMessage.RoomInfo> infos = new java.util.ArrayList<>();
         for (Room r : roomManager.listOpenRooms()) {
@@ -199,15 +222,24 @@ public class MessageHandler {
         client.send(new RoomListResponseMessage(infos));
     }
 
+    /** Procesa solicitudes de abandono de sala. */
     private void handleLeaveRoom(ClientConnection client, String json) {
         String roomId = client.getCurrentRoomId();
         if (roomId == null) return;
-        roomManager.leaveRoom(roomId, client.getPlayerId());
+        String playerId = client.getPlayerId();
+
+        GameInstance gi = gameInstanceManager.getGameByPlayer(playerId);
+        if (gi != null && !gi.isFinished()) {
+            gi.markPlayerDisconnected(playerId);
+        }
+
+        roomManager.leaveRoom(roomId, playerId);
         client.setCurrentRoomId(null);
         Room room = roomManager.getRoom(roomId);
         if (room != null) broadcastRoomUpdate(room);
     }
 
+    /** Inicia la partida si el cliente es el anfitrión y hay suficientes jugadores. */
     private void handleStartGame(ClientConnection client, String json) {
         String roomId = client.getCurrentRoomId();
         if (roomId == null) {
@@ -227,6 +259,7 @@ public class MessageHandler {
         roomManager.startGame(roomId);
     }
 
+    /** Procesa entrada de movimiento de un jugador y la encola en su partida. */
     private void handleMove(ClientConnection client, String json) {
         GameInstance game = gameInstanceManager.getGameByPlayer(
             client.getPlayerId()
@@ -236,12 +269,13 @@ public class MessageHandler {
             return;
         }
         MoveMessage msg = JsonUtil.fromJson(json, MoveMessage.class);
-        msg.normalize(); // Sanitiza vector
+        msg.normalize();
         game.queueInput(
             new PlayerInput(client.getPlayerId(), MessageType.MOVE_INPUT, msg)
         );
     }
 
+    /** Procesa entrada de disparo con rate limiting y la encola en la partida. */
     private void handleShoot(ClientConnection client, String json) {
         GameInstance game = gameInstanceManager.getGameByPlayer(
             client.getPlayerId()
@@ -260,6 +294,7 @@ public class MessageHandler {
         );
     }
 
+    /** Procesa una solicitud de reconexión validando el token y re-asignando la conexión. */
     private void handleReconnect(ClientConnection client, String json) {
         ReconnectMessage msg = JsonUtil.fromJson(json, ReconnectMessage.class);
         if (!authService.validateToken(msg.getToken())) {
@@ -268,9 +303,8 @@ public class MessageHandler {
         }
 
         String userId = msg.getUserId();
-        String playerId = userId; // userId == playerId en este sistema
+        String playerId = userId;
 
-        // Re-autenticar la nueva conexion con el playerId existente
         client.setPlayerId(playerId);
         client.setUserId(userId);
         client.setAuthenticated(true);
@@ -291,6 +325,7 @@ public class MessageHandler {
         }
     }
 
+    /** Extrae un campo string de un JSON con valor por defecto. */
     private String extractStringField(
         String json,
         String field,

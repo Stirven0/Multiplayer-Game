@@ -144,6 +144,8 @@ public class JsonUtil {
                 case PONG -> PongMessage.class;
                 case ROOM_LIST_RESPONSE -> RoomListResponseMessage.class;
                 case RECONNECT -> ReconnectMessage.class;
+                case IDLE_WARNING -> IdleWarningMessage.class;
+                case KICKED_IDLE -> KickedIdleMessage.class;
                 default -> throw new JsonParseException(
                     "Tipo de mensaje no mapeado a clase concreta: " + type
                 );

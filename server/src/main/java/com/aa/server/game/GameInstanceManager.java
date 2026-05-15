@@ -9,6 +9,8 @@ import com.aa.server.room.RoomManager;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.aa.shared.message.Message;
+
 public class GameInstanceManager {
     private final ConcurrentHashMap<String, GameInstance> instances = new ConcurrentHashMap<>();
     private final ConnectionManager connectionManager;
@@ -30,6 +32,21 @@ public class GameInstanceManager {
 
         GameInstance instance = new GameInstance(room.getRoomId(), room, map, connectionManager);
         instance.setOnGameEndCallback(() -> cleanupGame(room.getRoomId()));
+        instance.setMessageSender((playerId, msg) -> {
+            ClientConnection c = connectionManager.getByPlayerId(playerId);
+            if (c != null && c.isOpen()) {
+                c.send(msg);
+            }
+            if (msg instanceof com.aa.shared.message.KickedIdleMessage) {
+                String roomId = instance.getState().getGameId();
+                if (roomManager != null) {
+                    roomManager.leaveRoom(roomId, playerId);
+                }
+                if (c != null) {
+                    c.setCurrentRoomId(null);
+                }
+            }
+        });
         instances.put(room.getRoomId(), instance);
         instance.start();
     }
@@ -62,4 +79,5 @@ public class GameInstanceManager {
             System.out.println("[GAME] Player disconnected, marked as dead: " + playerId);
         }
     }
+
 }

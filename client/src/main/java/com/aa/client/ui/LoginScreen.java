@@ -26,6 +26,10 @@ public class LoginScreen {
     private boolean registerMode = false;
     private Hyperlink toggleLink;
     private VBox helpOverlay;
+    private Button helpBtn;
+    private Button exitBtn;
+
+    private static final String INPUT_STYLE = "-fx-background-color: #21262d; -fx-text-fill: #f0f6fc; -fx-prompt-text-fill: #484f58; -fx-font-size: 14px; -fx-padding: 10 14; -fx-background-radius: 6; -fx-border-color: #30363d; -fx-border-radius: 6; -fx-border-width: 1; -fx-max-width: 260;";
 
     public LoginScreen(GameClient gameClient) {
         this.gameClient = gameClient;
@@ -35,81 +39,85 @@ public class LoginScreen {
         Platform.runLater(() -> {
             if (status != null) {
                 status.setText(msg);
-                status.setStyle("-fx-text-fill: #ff5252;");
+                status.setStyle("-fx-text-fill: #f85149; -fx-font-size: 13px;");
             }
         });
     }
 
     public Scene createScene(Stage stage) {
-        VBox form = new VBox(10);
+        VBox form = new VBox(12);
         form.setAlignment(Pos.CENTER);
-        form.setStyle("-fx-padding: 20;");
+        form.setMaxWidth(320);
+        form.setStyle(Styles.PANEL);
 
-        Label title = new Label("Shooter Login");
-        title.setStyle("-fx-text-fill: white; -fx-font-size: 24px;");
+        Label title = new Label("MULTIPLAYER\nSHOOTER");
+        title.setStyle("-fx-text-fill: #58a6ff; -fx-font-size: 26px; -fx-font-weight: bold; -fx-text-alignment: center; -fx-line-spacing: 2;");
+
+        Label subtitle = new Label("Inicia sesión para jugar");
+        subtitle.setStyle("-fx-text-fill: #8b949e; -fx-font-size: 13px;");
 
         user = new TextField("player1");
-        user.setPromptText("Username");
-        user.setMaxWidth(200);
+        user.setPromptText("Usuario");
+        user.setStyle(INPUT_STYLE);
 
         pass = new PasswordField();
-        pass.setPromptText("Password");
+        pass.setPromptText("Contraseña");
         pass.setText("pass1");
-        pass.setMaxWidth(200);
+        pass.setStyle(INPUT_STYLE);
 
         status = new Label();
-        status.setStyle("-fx-text-fill: orange;");
+        status.setStyle("-fx-text-fill: #d29922; -fx-font-size: 13px;");
 
         btn = new Button("Connect & Login");
+        Styles.setBtnStyle(btn, Styles.ACCENT, Styles.ACCENT_HOVER);
+        btn.setMaxWidth(260);
         btn.setOnAction(e -> doLogin());
 
         toggleLink = new Hyperlink("¿No tienes cuenta? Regístrate");
-        toggleLink.setStyle("-fx-text-fill: #4fc3f7;");
+        toggleLink.setId("toggleLink");
+        toggleLink.setStyle("-fx-text-fill: #58a6ff; -fx-font-size: 12px; -fx-border-color: transparent; -fx-underline: false;");
         toggleLink.setOnAction(e -> toggleMode());
 
-        Button exitBtn = new Button("Salir");
-        exitBtn.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;");
-        exitBtn.setOnMouseEntered(e -> exitBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;"));
-        exitBtn.setOnMouseExited(e -> exitBtn.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;"));
-        exitBtn.setOnAction(e -> Platform.exit());
+        HBox bottomRow = new HBox(10);
+        bottomRow.setAlignment(Pos.CENTER);
 
-        Button helpBtn = new Button("Ayuda");
-        helpBtn.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;");
-        helpBtn.setOnMouseEntered(e -> helpBtn.setStyle("-fx-background-color: #5a5a5a; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;"));
-        helpBtn.setOnMouseExited(e -> helpBtn.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;"));
+        helpBtn = new Button("Ayuda");
+        Styles.setBtnStyle(helpBtn, Styles.BG_INPUT, Styles.BORDER);
         helpBtn.setOnAction(e -> {
             helpOverlay.setVisible(true);
             helpOverlay.setManaged(true);
         });
 
-        HBox bottomRow = new HBox(10);
-        bottomRow.setAlignment(Pos.CENTER);
+        exitBtn = new Button("Salir");
+        Styles.setBtnStyle(exitBtn, Styles.DANGER, Styles.DANGER_HOVER);
+        exitBtn.setOnAction(e -> Platform.exit());
+
         bottomRow.getChildren().addAll(helpBtn, exitBtn);
 
-        form.getChildren().addAll(title, user, pass, btn, toggleLink, status, bottomRow);
+        form.getChildren().addAll(title, subtitle, user, pass, btn, toggleLink, status, bottomRow);
 
-        // Help overlay
         helpOverlay = createHelpOverlay();
         helpOverlay.setVisible(false);
         helpOverlay.setManaged(false);
 
         StackPane centerStack = new StackPane(form, helpOverlay);
+        centerStack.setStyle("-fx-background-color: linear-gradient(to bottom, #0d1117, #161b22);");
 
         BorderPane root = new BorderPane();
         root.setTop(TitleBar.create("Shooter Game", stage));
         root.setCenter(centerStack);
-        root.setStyle("-fx-background-color: #2b2b2b;");
 
-        return new Scene(root, ClientConfig.WIDTH, ClientConfig.HEIGHT + TitleBar.HEIGHT);
+        Scene scene = new Scene(root, ClientConfig.WIDTH, ClientConfig.HEIGHT + TitleBar.HEIGHT);
+        return scene;
     }
 
     private VBox createHelpOverlay() {
-        VBox overlay = new VBox(10);
+        VBox overlay = new VBox(12);
         overlay.setAlignment(Pos.CENTER);
-        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.85); -fx-padding: 30;");
+        overlay.setStyle("-fx-background-color: rgba(13, 17, 23, 0.92); -fx-padding: 30; -fx-background-radius: 8;");
 
         Label helpTitle = new Label("AYUDA - CONTROLES");
-        helpTitle.setStyle("-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;");
+        helpTitle.setStyle("-fx-text-fill: #f0f6fc; -fx-font-size: 20px; -fx-font-weight: bold;");
 
         String[] lines = {
             "WASD / Flechas ................. Moverse",
@@ -124,12 +132,12 @@ public class LoginScreen {
         textBox.setAlignment(Pos.CENTER);
         for (String line : lines) {
             Label l = new Label(line);
-            l.setStyle("-fx-text-fill: #ccc; -fx-font-size: 14px;");
+            l.setStyle("-fx-text-fill: #8b949e; -fx-font-size: 14px;");
             textBox.getChildren().add(l);
         }
 
-        Button closeBtn = new Button("Cerrar");
-        closeBtn.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4; -fx-cursor: hand;");
+        Button closeBtn = new Button("Volver");
+        Styles.setBtnStyle(closeBtn, Styles.ACCENT, Styles.ACCENT_HOVER);
         closeBtn.setOnAction(e -> {
             overlay.setVisible(false);
             overlay.setManaged(false);
@@ -145,7 +153,7 @@ public class LoginScreen {
             btn.setText("Register & Login");
             toggleLink.setText("Ya tienes cuenta? Inicia sesión");
             status.setText("Modo registro");
-            status.setStyle("-fx-text-fill: orange;");
+            status.setStyle("-fx-text-fill: #d29922; -fx-font-size: 13px;");
         } else {
             btn.setText("Connect & Login");
             toggleLink.setText("¿No tienes cuenta? Regístrate");
@@ -157,28 +165,28 @@ public class LoginScreen {
         btn.setDisable(true);
         AudioManager.playClick();
         status.setText("Conectando...");
-        status.setStyle("-fx-text-fill: orange;");
+        status.setStyle("-fx-text-fill: #d29922; -fx-font-size: 13px;");
 
         String username = user.getText().trim();
         String password = pass.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
             status.setText("Usuario y contraseña requeridos");
-            status.setStyle("-fx-text-fill: #ff5252;");
+            status.setStyle("-fx-text-fill: #f85149; -fx-font-size: 13px;");
             btn.setDisable(false);
             return;
         }
 
         new Thread(() -> {
             boolean ok = gameClient.connect();
-
             Platform.runLater(() -> {
                 if (ok) {
                     status.setText("Conectado. Enviando login...");
+                    status.setStyle("-fx-text-fill: #3fb950; -fx-font-size: 13px;");
                     gameClient.sendLogin(username, password, registerMode);
                 } else {
                     status.setText("Error de conexión");
-                    status.setStyle("-fx-text-fill: #ff5252;");
+                    status.setStyle("-fx-text-fill: #f85149; -fx-font-size: 13px;");
                     btn.setDisable(false);
                 }
             });

@@ -25,12 +25,6 @@ public class LobbyScreen {
         "map_04", "Fortress"
     );
 
-    private static final String BTN_STYLE = "-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4;";
-    private static final String BTN_HOVER = "-fx-background-color: #5a5a5a; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4;";
-    private static final String BTN_DANGER = "-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4;";
-    private static final String BTN_PRIMARY = "-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 8 16; -fx-background-radius: 4;";
-    private static final String PANEL = "-fx-background-color: #1e1e1e; -fx-padding: 12; -fx-background-radius: 6;";
-
     private final GameClient gameClient;
     private Label roomInfoLabel;
     private Label roomStatusLabel;
@@ -41,102 +35,98 @@ public class LobbyScreen {
     private Label errorLabel;
     private VBox myRoomPanel;
 
+    private static final String LIST_STYLE = "-fx-control-inner-background: #161b22; -fx-control-inner-background-alt: #1c2128; -fx-text-fill: #f0f6fc; -fx-background-radius: 6; -fx-border-color: #30363d; -fx-border-radius: 6; -fx-border-width: 1; -fx-selection-bar: #1f6feb; -fx-selection-bar-non-focused: #21262d;";
+    private static final String LABEL_ACCENT = "-fx-text-fill: #58a6ff; -fx-font-size: 14px; -fx-font-weight: bold;";
+    private static final String LABEL_GREEN = "-fx-text-fill: #2ea043; -fx-font-size: 14px; -fx-font-weight: bold;";
+    private static final String LABEL_GOLD = "-fx-text-fill: #d29922; -fx-font-size: 14px; -fx-font-weight: bold;";
+
     public LobbyScreen(GameClient gameClient) {
         this.gameClient = gameClient;
     }
 
     public Scene createScene(Stage stage) {
         BorderPane content = new BorderPane();
-        content.setStyle("-fx-background-color: #2b2b2b;");
-        content.setPadding(new Insets(15));
+        content.setStyle("-fx-background-color: linear-gradient(to bottom, #0d1117, #161b22);");
+        content.setPadding(new Insets(20));
 
-        // === TOP BAR ===
         HBox topBar = new HBox(10);
         topBar.setAlignment(Pos.CENTER_LEFT);
 
         String username = gameClient.getCurrentUsername();
-        Label userLabel = new Label("Usuario: " + (username != null ? username : "?"));
-        userLabel.setStyle("-fx-text-fill: #4fc3f7; -fx-font-size: 15px; -fx-font-weight: bold;");
+        Label userLabel = new Label("👤 " + (username != null ? username : "?"));
+        userLabel.setStyle("-fx-text-fill: #58a6ff; -fx-font-size: 14px; -fx-font-weight: bold;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        Label versionLabel = new Label("v1.0");
+        versionLabel.setStyle("-fx-text-fill: #484f58; -fx-font-size: 11px; -fx-padding: 0 10;");
+
         Button logoutBtn = new Button("Cerrar sesión");
-        logoutBtn.setStyle(BTN_DANGER);
-        logoutBtn.setOnMouseEntered(e -> logoutBtn.setStyle(BTN_DANGER.replace("#c0392b", "#e74c3c")));
-        logoutBtn.setOnMouseExited(e -> logoutBtn.setStyle(BTN_DANGER));
+        Styles.setBtnStyle(logoutBtn, Styles.DANGER, Styles.DANGER_HOVER);
+
         logoutBtn.setOnAction(e -> gameClient.logout());
 
-        topBar.getChildren().addAll(userLabel, spacer, logoutBtn);
+        topBar.getChildren().addAll(userLabel, spacer, versionLabel, logoutBtn);
 
-        // === ERROR LABEL ===
         errorLabel = new Label();
-        errorLabel.setStyle("-fx-text-fill: #ff5252; -fx-font-size: 12px;");
+        errorLabel.setStyle("-fx-text-fill: #f85149; -fx-font-size: 12px;");
         errorLabel.setVisible(false);
 
-        // === CENTER: TWO COLUMNS ===
         HBox center = new HBox(20);
         center.setAlignment(Pos.TOP_CENTER);
 
-        // --- LEFT COLUMN: My Room ---
-        VBox left = new VBox(10);
+        VBox left = new VBox(12);
         left.setPrefWidth(300);
 
-        myRoomPanel = new VBox(8);
-        myRoomPanel.setStyle(PANEL);
+        myRoomPanel = new VBox(10);
+        myRoomPanel.setStyle(Styles.PANEL);
 
         Label myRoomTitle = new Label("MI SALA");
-        myRoomTitle.setStyle("-fx-text-fill: #f39c12; -fx-font-size: 14px; -fx-font-weight: bold;");
+        myRoomTitle.setStyle(LABEL_GOLD);
 
         roomInfoLabel = new Label("No estás en ninguna sala");
-        roomInfoLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
+        roomInfoLabel.setStyle("-fx-text-fill: #484f58; -fx-font-size: 12px;");
 
         roomStatusLabel = new Label();
-        roomStatusLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 11px;");
+        roomStatusLabel.setStyle("-fx-text-fill: #8b949e; -fx-font-size: 11px;");
 
         playerList = new ListView<>();
-        playerList.setMaxHeight(120);
-        playerList.setPrefHeight(120);
-        playerList.setStyle("-fx-control-inner-background: #2a2a2a; -fx-text-fill: white; -fx-background-radius: 4;");
+        playerList.setMaxHeight(140);
+        playerList.setPrefHeight(140);
+        playerList.setStyle(LIST_STYLE);
 
         HBox roomActions = new HBox(8);
         roomActions.setAlignment(Pos.CENTER);
 
         Button leaveBtn = new Button("Salir de sala");
-        leaveBtn.setStyle(BTN_STYLE);
-        leaveBtn.setOnMouseEntered(e -> leaveBtn.setStyle(BTN_HOVER));
-        leaveBtn.setOnMouseExited(e -> leaveBtn.setStyle(BTN_STYLE));
+        Styles.setBtnStyle(leaveBtn, Styles.BG_INPUT, Styles.BORDER);
         leaveBtn.setOnAction(e -> gameClient.leaveRoom());
 
         Button startBtn = new Button("Iniciar partida");
-        startBtn.setStyle(BTN_PRIMARY);
-        startBtn.setOnMouseEntered(e -> startBtn.setStyle(BTN_PRIMARY.replace("#2980b9", "#3498db")));
-        startBtn.setOnMouseExited(e -> startBtn.setStyle(BTN_PRIMARY));
+        Styles.setBtnStyle(startBtn, Styles.SUCCESS, Styles.SUCCESS_HOVER);
         startBtn.setOnAction(e -> gameClient.startGame());
 
         roomActions.getChildren().addAll(leaveBtn, startBtn);
 
         myRoomPanel.getChildren().addAll(myRoomTitle, roomInfoLabel, roomStatusLabel, playerList, roomActions);
 
-        // --- Create Room sub-panel ---
-        VBox createPanel = new VBox(8);
-        createPanel.setStyle(PANEL);
+        VBox createPanel = new VBox(10);
+        createPanel.setStyle(Styles.PANEL);
 
         Label createTitle = new Label("CREAR SALA");
-        createTitle.setStyle("-fx-text-fill: #2ecc71; -fx-font-size: 14px; -fx-font-weight: bold;");
+        createTitle.setStyle(LABEL_GREEN);
 
         mapSelector = new ComboBox<>();
         for (var entry : MAP_NAMES.entrySet()) {
             mapSelector.getItems().add(entry.getValue() + " (" + entry.getKey() + ")");
         }
         mapSelector.setValue("Warehouse (map_01)");
-        mapSelector.setStyle("-fx-background-color: #3a3a3a; -fx-text-fill: white;");
+        mapSelector.setStyle("-fx-background-color: #21262d; -fx-text-fill: #f0f6fc; -fx-font-size: 13px; -fx-background-radius: 6; -fx-border-color: #30363d; -fx-border-radius: 6;");
 
         Button createBtn = new Button("Crear sala");
-        createBtn.setStyle(BTN_PRIMARY);
+        Styles.setBtnStyle(createBtn, Styles.ACCENT, Styles.ACCENT_HOVER);
         createBtn.setMaxWidth(Double.MAX_VALUE);
-        createBtn.setOnMouseEntered(e -> createBtn.setStyle(BTN_PRIMARY.replace("#2980b9", "#3498db")));
-        createBtn.setOnMouseExited(e -> createBtn.setStyle(BTN_PRIMARY));
         createBtn.setOnAction(e -> {
             String selected = mapSelector.getValue();
             String mapId = selected.substring(selected.lastIndexOf('(') + 1, selected.lastIndexOf(')'));
@@ -148,33 +138,33 @@ public class LobbyScreen {
 
         left.getChildren().addAll(myRoomPanel, createPanel);
 
-        // --- RIGHT COLUMN: Available Rooms ---
-        VBox right = new VBox(10);
+        VBox right = new VBox(12);
         right.setPrefWidth(380);
 
-        VBox roomsPanel = new VBox(8);
-        roomsPanel.setStyle(PANEL);
+        VBox roomsPanel = new VBox(10);
+        roomsPanel.setStyle(Styles.PANEL);
 
         HBox roomsHeader = new HBox(8);
         roomsHeader.setAlignment(Pos.CENTER_LEFT);
 
         Label roomsTitle = new Label("SALAS DISPONIBLES");
-        roomsTitle.setStyle("-fx-text-fill: #3498db; -fx-font-size: 14px; -fx-font-weight: bold;");
+        roomsTitle.setStyle(LABEL_ACCENT);
 
         Region roomsSpacer = new Region();
         HBox.setHgrow(roomsSpacer, Priority.ALWAYS);
 
-        Button refreshBtn = new Button("Refrescar");
-        refreshBtn.setStyle(BTN_STYLE);
-        refreshBtn.setOnMouseEntered(e -> refreshBtn.setStyle(BTN_HOVER));
-        refreshBtn.setOnMouseExited(e -> refreshBtn.setStyle(BTN_STYLE));
+        String btnStyleAux = "-fx-background-color: #21262d; -fx-text-fill: #f0f6fc; -fx-font-size: 12px; -fx-padding: 6 14; -fx-background-radius: 6; -fx-cursor: hand; -fx-border-color: #30363d; -fx-border-radius: 6; -fx-border-width: 1;";
+        Button refreshBtn = new Button("↻ Refrescar");
+        refreshBtn.setStyle(btnStyleAux);
+        refreshBtn.setOnMouseEntered(e -> refreshBtn.setStyle(btnStyleAux.replace("#21262d", "#30363d")));
+        refreshBtn.setOnMouseExited(e -> refreshBtn.setStyle(btnStyleAux));
         refreshBtn.setOnAction(e -> gameClient.requestRoomList());
 
         roomsHeader.getChildren().addAll(roomsTitle, roomsSpacer, refreshBtn);
 
         roomListView = new ListView<>();
-        roomListView.setPrefHeight(200);
-        roomListView.setStyle("-fx-control-inner-background: #2a2a2a; -fx-text-fill: white; -fx-background-radius: 4;");
+        roomListView.setPrefHeight(220);
+        roomListView.setStyle(LIST_STYLE);
         roomListView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 int idx = roomListView.getSelectionModel().getSelectedIndex();
@@ -185,10 +175,8 @@ public class LobbyScreen {
         });
 
         Button joinSelectedBtn = new Button("Unirse a sala seleccionada");
-        joinSelectedBtn.setStyle(BTN_PRIMARY);
+        Styles.setBtnStyle(joinSelectedBtn, Styles.SUCCESS, Styles.SUCCESS_HOVER);
         joinSelectedBtn.setMaxWidth(Double.MAX_VALUE);
-        joinSelectedBtn.setOnMouseEntered(e -> joinSelectedBtn.setStyle(BTN_PRIMARY.replace("#2980b9", "#3498db")));
-        joinSelectedBtn.setOnMouseExited(e -> joinSelectedBtn.setStyle(BTN_PRIMARY));
         joinSelectedBtn.setOnAction(e -> {
             int idx = roomListView.getSelectionModel().getSelectedIndex();
             if (idx >= 0 && idx < cachedRooms.size()) {
@@ -203,8 +191,7 @@ public class LobbyScreen {
 
         center.getChildren().addAll(left, right);
 
-        // === ASSEMBLE ===
-        VBox topSection = new VBox(5);
+        VBox topSection = new VBox(8);
         topSection.getChildren().addAll(topBar, errorLabel);
 
         content.setTop(topSection);
@@ -232,14 +219,18 @@ public class LobbyScreen {
 
     public void updateRoomInfo(String roomId) {
         Platform.runLater(() -> {
-            roomInfoLabel.setText("Sala: " + roomId);
-            roomStatusLabel.setText("Esperando jugadores...");
+            roomInfoLabel.setText("🆔 Sala: " + roomId);
+            roomInfoLabel.setStyle("-fx-text-fill: #58a6ff; -fx-font-size: 13px; -fx-font-weight: bold;");
+            roomStatusLabel.setText("⏳ Esperando jugadores...");
+            roomStatusLabel.setStyle("-fx-text-fill: #d29922; -fx-font-size: 12px;");
         });
     }
 
     public void updatePlayerList(List<String> playerIds) {
         Platform.runLater(() -> {
             playerList.getItems().setAll(playerIds);
+            roomStatusLabel.setText("👥 " + playerIds.size() + " jugador(es) en sala");
+            roomStatusLabel.setStyle("-fx-text-fill: #8b949e; -fx-font-size: 12px;");
         });
     }
 

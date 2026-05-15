@@ -106,8 +106,12 @@ public class GameServer extends WebSocketServer {
     }
 
     private void startTimeoutChecker() {
+        long timeoutMs = ServerConfig.CONNECTION_TIMEOUT_MS;
+        if (timeoutMs <= 0) {
+            System.out.println("[NET] Timeout checker desactivado (usa idle de juego)");
+            return;
+        }
         new Thread(() -> {
-            long timeoutMs = ServerConfig.CONNECTION_TIMEOUT_MS;
             while (true) {
                 try {
                     Thread.sleep(ServerConfig.TIMEOUT_CHECK_INTERVAL_MS);

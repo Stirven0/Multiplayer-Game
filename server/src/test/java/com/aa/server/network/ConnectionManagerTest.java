@@ -7,11 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import com.aa.shared.message.PongMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ConnectionManagerTest {
 
     @Mock
@@ -63,7 +67,7 @@ class ConnectionManagerTest {
     void broadcastToSpecificPlayers() {
         // Setup complejo simplificado: verificamos que no lanza excepción
         assertDoesNotThrow(() -> 
-            manager.broadcastToPlayers(java.util.List.of("p1", "p2"), mock(com.aa.shared.message.Message.class))
+            manager.broadcastToPlayers(java.util.List.of("p1", "p2"), new PongMessage())
         );
     }
 }

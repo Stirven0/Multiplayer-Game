@@ -8,6 +8,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -22,44 +25,85 @@ public class GameOverScreen {
     }
 
     public Scene createScene(Stage stage) {
-        VBox content = new VBox(10);
+        VBox content = new VBox(12);
         content.setAlignment(Pos.CENTER);
-        content.setStyle("-fx-background-color: #1a1a2e;");
+        content.setStyle("-fx-background-color: linear-gradient(to bottom, #0d1117, #161b22);");
 
-        Label title = new Label("Game Over");
-        title.setStyle("-fx-text-fill: #e94560; -fx-font-size: 36px; -fx-font-weight: bold;");
+        Label title = new Label("GAME OVER");
+        title.setStyle("-fx-text-fill: #f85149; -fx-font-size: 40px; -fx-font-weight: bold; -fx-letter-spacing: 4;");
 
         boolean isDraw = endMsg.getWinnerUsername() == null || endMsg.getWinnerUsername().isEmpty() || "Empate".equals(endMsg.getWinnerUsername());
         Label winner = new Label(isDraw ? "Empate!" : "Ganador: " + endMsg.getWinnerUsername());
-        winner.setStyle(isDraw ? "-fx-text-fill: #aaa; -fx-font-size: 20px;" : "-fx-text-fill: gold; -fx-font-size: 20px;");
+        String winStyle = isDraw
+            ? "-fx-text-fill: #8b949e; -fx-font-size: 22px; -fx-font-weight: bold;"
+            : "-fx-text-fill: #ffd700; -fx-font-size: 22px; -fx-font-weight: bold;";
+        winner.setStyle(winStyle);
 
         long seconds = endMsg.getDuration() / 1000;
-        Label duration = new Label("Duracion: " + seconds + "s");
-        duration.setStyle("-fx-text-fill: #aaa; -fx-font-size: 14px;");
+        Label duration = new Label("⏱  Duración: " + seconds + "s");
+        duration.setStyle("-fx-text-fill: #484f58; -fx-font-size: 13px;");
 
-        VBox scoresBox = new VBox(5);
+        VBox scoresBox = new VBox(6);
         scoresBox.setAlignment(Pos.CENTER);
-        scoresBox.setStyle("-fx-padding: 20; -fx-background-color: #16213e;");
-        Label scoresTitle = new Label("Scoreboard");
-        scoresTitle.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        scoresBox.setMaxWidth(360);
+        scoresBox.setStyle("-fx-background-color: #161b22; -fx-background-radius: 8; -fx-border-color: #30363d; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 20;");
+
+        Label scoresTitle = new Label("SCOREBOARD");
+        scoresTitle.setStyle("-fx-text-fill: #58a6ff; -fx-font-size: 16px; -fx-font-weight: bold;");
+
+        HBox headerRow = new HBox();
+        headerRow.setPrefWidth(320);
+        Label hPos = new Label("#");
+        hPos.setStyle("-fx-text-fill: #484f58; -fx-font-size: 12px; -fx-min-width: 24;");
+        Label hName = new Label("Jugador");
+        hName.setStyle("-fx-text-fill: #484f58; -fx-font-size: 12px; -fx-min-width: 120;");
+        Region hSpacer = new Region();
+        HBox.setHgrow(hSpacer, Priority.ALWAYS);
+        Label hKills = new Label("K");
+        hKills.setStyle("-fx-text-fill: #484f58; -fx-font-size: 12px; -fx-min-width: 28; -fx-alignment: center-right;");
+        Label hDeaths = new Label("D");
+        hDeaths.setStyle("-fx-text-fill: #484f58; -fx-font-size: 12px; -fx-min-width: 28; -fx-alignment: center-right;");
+        headerRow.getChildren().addAll(hPos, hName, hSpacer, hKills, hDeaths);
         scoresBox.getChildren().add(scoresTitle);
+        scoresBox.getChildren().add(headerRow);
 
         if (endMsg.getScores() != null) {
-            for (GameEndMessage.PlayerScore score : endMsg.getScores()) {
-                String prefix = score.isWinner() ? "[WINNER] " : "";
-                Label scoreLabel = new Label(String.format(
-                    "%s%s - Kills: %d  Deaths: %d",
-                    prefix, score.getUsername(), score.getKills(), score.getDeaths()
-                ));
-                scoreLabel.setStyle(score.isWinner()
-                    ? "-fx-text-fill: gold; -fx-font-size: 14px;"
-                    : "-fx-text-fill: #ccc; -fx-font-size: 14px;");
-                scoresBox.getChildren().add(scoreLabel);
+            int rank = 1;
+            var sorted = new java.util.ArrayList<>(endMsg.getScores());
+            sorted.sort((a, b) -> Integer.compare(b.getKills(), a.getKills()));
+            for (GameEndMessage.PlayerScore score : sorted) {
+                HBox row = new HBox();
+                row.setPrefWidth(320);
+
+                String posStyle = score.isWinner()
+                    ? "-fx-text-fill: #ffd700; -fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 24;"
+                    : "-fx-text-fill: #8b949e; -fx-font-size: 14px; -fx-min-width: 24;";
+                Label posLabel = new Label(rank == 1 ? "🥇" : rank == 2 ? "🥈" : rank == 3 ? "🥉" : rank + ".");
+                posLabel.setStyle(posStyle);
+
+                String nameStyle = score.isWinner()
+                    ? "-fx-text-fill: #ffd700; -fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 120;"
+                    : "-fx-text-fill: #f0f6fc; -fx-font-size: 14px; -fx-min-width: 120;";
+                Label nameLabel = new Label(score.getUsername());
+                nameLabel.setStyle(nameStyle);
+
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                String statStyle = "-fx-text-fill: #f0f6fc; -fx-font-size: 14px; -fx-min-width: 28; -fx-alignment: center-right;";
+                Label killsLabel = new Label(String.valueOf(score.getKills()));
+                killsLabel.setStyle(statStyle);
+                Label deathsLabel = new Label(String.valueOf(score.getDeaths()));
+                deathsLabel.setStyle(statStyle);
+
+                row.getChildren().addAll(posLabel, nameLabel, spacer, killsLabel, deathsLabel);
+                scoresBox.getChildren().add(row);
+                rank++;
             }
         }
 
         Button backBtn = new Button("Volver al Lobby");
-        backBtn.setStyle("-fx-font-size: 14px; -fx-padding: 10 20;");
+        Styles.setBtnStyle(backBtn, Styles.ACCENT, Styles.ACCENT_HOVER);
         backBtn.setOnAction(e -> gameClient.getScreenManager().showLobby());
 
         content.getChildren().addAll(title, winner, duration, scoresBox, backBtn);

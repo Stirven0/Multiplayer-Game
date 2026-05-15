@@ -5,5 +5,13 @@
 *.jar binary
 *.png binary
 *.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
 *.ogg binary
+*.mp3 binary
 *.wav binary
+*.mp4 binary
+*.keystore binary
+*.jks binary
+*.p12 binary

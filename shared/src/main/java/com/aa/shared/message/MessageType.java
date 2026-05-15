@@ -42,5 +42,7 @@ public enum MessageType {
     PONG,
     ERROR,           // Error genérico
     DISCONNECT,      // Desconexión forzada
-    RECONNECT        // Reconexión después de timeout
+    RECONNECT,       // Reconexión después de timeout
+    IDLE_WARNING,    // Advertencia de inactividad (countdown)
+    KICKED_IDLE      // Expulsado por inactividad
 }
