@@ -51,6 +51,10 @@ public class RoomManager {
         room.setStatus(RoomStatus.PLAYING);
     }
 
+    public void removeRoom(String roomId) {
+        rooms.remove(roomId);
+    }
+
     public Collection<Room> listOpenRooms() {
         return rooms.values().stream()
                 .filter(r -> r.getStatus() == RoomStatus.WAITING)

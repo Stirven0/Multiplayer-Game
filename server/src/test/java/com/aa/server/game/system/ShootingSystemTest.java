@@ -34,7 +34,7 @@ class ShootingSystemTest {
     @DisplayName("Debe crear bala al disparar")
     void shootCreatesBullet() {
         ShootMessage msg = new ShootMessage(0.0); // derecha
-        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)));
+        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)), null);
 
         List<Bullet> bullets = state.getAllBullets();
         assertEquals(1, bullets.size());
@@ -50,8 +50,8 @@ class ShootingSystemTest {
         ShootMessage msg = new ShootMessage(0.0);
         PlayerInput input = new PlayerInput("p1", MessageType.SHOOT_INPUT, msg);
 
-        system.update(state, 0.05f, List.of(input));
-        system.update(state, 0.05f, List.of(input)); // Inmediatamente después
+        system.update(state, 0.05f, List.of(input), null);
+        system.update(state, 0.05f, List.of(input), null); // Inmediatamente después
 
         assertEquals(1, state.getAllBullets().size());
     }
@@ -61,7 +61,7 @@ class ShootingSystemTest {
     void deadPlayerCannotShoot() {
         player.setHealth(0);
         ShootMessage msg = new ShootMessage(0.0);
-        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)));
+        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)), null);
 
         assertTrue(state.getAllBullets().isEmpty());
     }
@@ -70,7 +70,7 @@ class ShootingSystemTest {
     @DisplayName("Debe spawnear bala con offset desde el jugador")
     void bulletSpawnOffsetFromPlayer() {
         ShootMessage msg = new ShootMessage(Math.PI); // izquierda
-        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)));
+        system.update(state, 0.05f, List.of(new PlayerInput("p1", MessageType.SHOOT_INPUT, msg)), null);
 
         Bullet b = state.getAllBullets().get(0);
         assertTrue(b.getPosition().x() < 100); // Offset hacia la izquierda

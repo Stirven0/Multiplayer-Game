@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
     private final ConcurrentHashMap<String, ClientConnection> byConnectionId = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ClientConnection> byPlayerId = new ConcurrentHashMap<>();
-
     public void register(WebSocket socket) {
         ClientConnection conn = new ClientConnection(socket);
         socket.setAttachment(conn.getConnectionId());

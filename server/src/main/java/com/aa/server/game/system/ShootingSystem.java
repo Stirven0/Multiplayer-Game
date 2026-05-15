@@ -1,6 +1,7 @@
 package com.aa.server.game.system;
 
 import com.aa.server.game.PlayerInput;
+import com.aa.server.game.map.GameMap;
 import com.aa.server.util.ServerConfig;
 import com.aa.shared.message.MessageType;
 import com.aa.shared.message.ShootMessage;
@@ -19,7 +20,7 @@ public class ShootingSystem implements GameSystem {
     private final AtomicInteger bulletCounter = new AtomicInteger(0);
 
     @Override
-    public void update(GameState state, float deltaTime, List<PlayerInput> inputs) {
+    public void update(GameState state, float deltaTime, List<PlayerInput> inputs, GameMap map) {
         long now = System.currentTimeMillis();
 
         for (PlayerInput input : inputs) {

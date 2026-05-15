@@ -1,6 +1,6 @@
 package com.aa.server.game.map;
 
-import com.aa.shared.model.Vector2;
+import com.aa.shared.model.Obstacle;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -18,6 +18,7 @@ public class MapLoader {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             
             String id = json.get("id").getAsString();
+            String name = json.has("name") ? json.get("name").getAsString() : id;
             double width = json.get("width").getAsDouble();
             double height = json.get("height").getAsDouble();
             
@@ -33,7 +34,7 @@ public class MapLoader {
                 ));
             }
             
-            return new GameMap(id, width, height, obstacles);
+            return new GameMap(id, name, width, height, obstacles);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to load map: " + resourcePath, e);

@@ -1,6 +1,7 @@
 package com.aa.server.game.engine;
 
 import com.aa.server.game.PlayerInput;
+import com.aa.server.game.map.GameMap;
 import com.aa.server.game.system.*;
 import com.aa.shared.state.GameState;
 
@@ -20,9 +21,9 @@ public class GameEngine {
         systems.add(new DamageSystem());
     }
 
-    public void update(GameState state, float deltaTime, List<PlayerInput> inputs) {
+    public void update(GameState state, float deltaTime, List<PlayerInput> inputs, GameMap map) {
         for (GameSystem system : systems) {
-            system.update(state, deltaTime, inputs);
+            system.update(state, deltaTime, inputs, map);
         }
     }
 }

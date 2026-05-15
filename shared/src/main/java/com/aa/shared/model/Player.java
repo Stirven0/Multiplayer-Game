@@ -12,6 +12,8 @@ public class Player {
     private double maxHealth;
     private boolean alive;
     private String username;
+    private int kills;
+    private int deaths;
     
     // Constructor vacío necesario para deserialización JSON
     public Player() {
@@ -56,6 +58,12 @@ public class Player {
     
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+    
+    public int getKills() { return kills; }
+    public void setKills(int kills) { this.kills = kills; }
+    
+    public int getDeaths() { return deaths; }
+    public void setDeaths(int deaths) { this.deaths = deaths; }
     
     public void takeDamage(double damage) {
         setHealth(this.health - damage);

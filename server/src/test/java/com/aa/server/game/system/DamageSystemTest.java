@@ -32,7 +32,7 @@ class DamageSystemTest {
 
         assertTrue(player.isAlive()); // Aún vivo antes del system
 
-        system.update(state, 0.05f, Collections.emptyList());
+        system.update(state, 0.05f, Collections.emptyList(), null);
 
         assertFalse(player.isAlive());
     }
@@ -44,7 +44,7 @@ class DamageSystemTest {
         player.setHealth(50);
         state.addPlayer(player);
 
-        system.update(state, 0.05f, Collections.emptyList());
+        system.update(state, 0.05f, Collections.emptyList(), null);
 
         assertTrue(player.isAlive());
     }

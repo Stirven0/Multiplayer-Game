@@ -64,6 +64,9 @@ public class InputHandler {
         mousePressed = false;
     }
 
+    public double getMouseScreenX() { return mouseScreenX; }
+    public double getMouseScreenY() { return mouseScreenY; }
+
     /**
      * Calcula ángulo del mouse respecto al jugador local en coordenadas de mundo.
      */

@@ -1,11 +1,12 @@
 package com.aa.server.game.engine;
 
 import com.aa.server.game.GameInstance;
+import com.aa.server.network.ClientConnection;
+import com.aa.server.network.ConnectionManager;
 import com.aa.server.util.ServerConfig;
+import com.aa.shared.message.GameEndMessage;
+import com.aa.shared.model.Player;
 
-/**
- * Hilo dedicado por partida. Fixed timestep con drift correction básica.
- */
 public class GameLoop implements Runnable {
     private final GameInstance instance;
     private volatile boolean running = false;
@@ -14,7 +15,7 @@ public class GameLoop implements Runnable {
     public GameLoop(GameInstance instance) {
         this.instance = instance;
     }
-    
+
     public boolean isRunning() { return running; }
 
     public void start() {
@@ -38,13 +39,20 @@ public class GameLoop implements Runnable {
             long now = System.currentTimeMillis();
 
             if (now >= nextTick) {
-                // Procesa lógica
                 instance.processTick(ServerConfig.TICK_DURATION_SECONDS);
-                instance.broadcastState();
 
+                if (instance.isFinished()) {
+                    instance.broadcastState();
+                    broadcastGameEnd();
+                    instance.stop();
+                    Runnable cb = instance.getOnGameEndCallback();
+                    if (cb != null) cb.run();
+                    return;
+                }
+
+                instance.broadcastState();
                 nextTick += tickDuration;
 
-                // Si vamos muy atrasados, resetear para evitar death spiral
                 if (nextTick < now) {
                     nextTick = now + tickDuration;
                 }
@@ -56,6 +64,15 @@ public class GameLoop implements Runnable {
                     break;
                 }
             }
+        }
+    }
+
+    private void broadcastGameEnd() {
+        GameEndMessage endMsg = instance.createGameEndMessage();
+        ConnectionManager cm = instance.getConnectionManager();
+        for (Player p : instance.getState().getAllPlayers()) {
+            ClientConnection c = cm.getByPlayerId(p.getId());
+            if (c != null) c.send(endMsg);
         }
     }
 }

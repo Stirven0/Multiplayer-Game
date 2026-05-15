@@ -1,6 +1,7 @@
 package com.aa.server.game.system;
 
 import com.aa.server.game.PlayerInput;
+import com.aa.server.game.map.GameMap;
 import com.aa.server.util.ServerConfig;
 import com.aa.shared.message.MessageType;
 import com.aa.shared.message.MoveMessage;
@@ -16,7 +17,7 @@ import java.util.List;
 public class MovementSystem implements GameSystem {
 
     @Override
-    public void update(GameState state, float deltaTime, List<PlayerInput> inputs) {
+    public void update(GameState state, float deltaTime, List<PlayerInput> inputs, GameMap map) {
         for (PlayerInput input : inputs) {
             if (input.type() != MessageType.MOVE_INPUT) continue;
 
@@ -43,9 +44,22 @@ public class MovementSystem implements GameSystem {
             double newX = player.getPosition().x() + dx * dist;
             double newY = player.getPosition().y() + dy * dist;
 
-            // TODO: validar colisiones con GameMap bounds y obstáculos
+            if (map != null) {
+                // Clampear dentro de los límites del mapa
+                newX = clamp(newX, 0, map.width());
+                newY = clamp(newY, 0, map.height());
 
-            player.setPosition(new Vector2(newX, newY));
+                Vector2 newPos = new Vector2(newX, newY);
+
+                // Rechazar movimiento si colisiona con un obstáculo
+                if (map.collides(newPos, ServerConfig.PLAYER_RADIUS)) {
+                    continue;
+                }
+
+                player.setPosition(newPos);
+            } else {
+                player.setPosition(new Vector2(newX, newY));
+            }
             player.setDirection(new Vector2(dx, dy).normalize());
         }
     }

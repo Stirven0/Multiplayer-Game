@@ -1,8 +1,10 @@
 package com.aa.shared.state;
 
+import com.aa.shared.model.Obstacle;
 import com.aa.shared.model.Player;
 import com.aa.shared.model.Bullet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +30,11 @@ public class GameState {
     private GameStatus status;
     private long startTime;
     private long endTime;
+    
+    // Mapa
+    private List<Obstacle> obstacles = Collections.emptyList();
+    private double mapWidth;
+    private double mapHeight;
     
     public enum GameStatus {
         WAITING,    // Esperando jugadores
@@ -101,6 +108,15 @@ public class GameState {
     public GameStatus getStatus() { return status; }
     public void setStatus(GameStatus status) { this.status = status; }
     
+    public List<Obstacle> getObstacles() { return obstacles; }
+    public void setObstacles(List<Obstacle> obstacles) { this.obstacles = obstacles; }
+
+    public double getMapWidth() { return mapWidth; }
+    public void setMapWidth(double mapWidth) { this.mapWidth = mapWidth; }
+
+    public double getMapHeight() { return mapHeight; }
+    public void setMapHeight(double mapHeight) { this.mapHeight = mapHeight; }
+
     public long getStartTime() { return startTime; }
     public void setStartTime(long startTime) { this.startTime = startTime; }
     
@@ -120,6 +136,9 @@ public class GameState {
         copy.status = this.status;
         copy.startTime = this.startTime;
         copy.endTime = this.endTime;
+        copy.obstacles = this.obstacles;
+        copy.mapWidth = this.mapWidth;
+        copy.mapHeight = this.mapHeight;
         
         // Copiar jugadores y balas
         for (Player p : this.players.values()) {
@@ -128,6 +147,8 @@ public class GameState {
             pCopy.setDirection(p.getDirection());
             pCopy.setHealth(p.getHealth());
             pCopy.setAlive(p.isAlive());
+            pCopy.setKills(p.getKills());
+            pCopy.setDeaths(p.getDeaths());
             copy.addPlayer(pCopy);
         }
         

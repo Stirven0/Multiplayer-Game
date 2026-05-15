@@ -37,29 +37,40 @@ public class AudioManager {
     }
 
     private static void playSfx(String path, double vol) {
-        AudioClip clip = sfxCache.computeIfAbsent(path, p -> {
-            var url = AudioManager.class.getResource("/audio/" + p);
-            return url != null ? new AudioClip(url.toExternalForm()) : null;
-        });
-        
-        if (clip != null) {
-            clip.play(masterVolume * vol);
+        try {
+            AudioClip clip = sfxCache.computeIfAbsent(path, p -> {
+                var url = AudioManager.class.getResource("/audio/" + p);
+                if (url == null) return null;
+                try {
+                    return new AudioClip(url.toExternalForm());
+                } catch (Exception e) {
+                    System.err.println("[AUDIO] Error loading SFX " + p + ": " + e.getMessage());
+                    return null;
+                }
+            });
+            if (clip != null) {
+                clip.play(masterVolume * vol);
+            }
+        } catch (Exception e) {
+            System.err.println("[AUDIO] Error playing SFX: " + e.getMessage());
         }
     }
 
     // ========== MÚSICA (larga, una a la vez) ==========
 
     public static void playMusic(String path) {
-        stopMusic();
-        
-        var url = AudioManager.class.getResource("/audio/" + path);
-        if (url == null) return;
-        
-        Media media = new Media(url.toExternalForm());
-        musicPlayer = new MediaPlayer(media);
-        musicPlayer.setVolume(masterVolume * musicVolume);
-        musicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-        musicPlayer.play();
+        try {
+            stopMusic();
+            var url = AudioManager.class.getResource("/audio/" + path);
+            if (url == null) return;
+            Media media = new Media(url.toExternalForm());
+            musicPlayer = new MediaPlayer(media);
+            musicPlayer.setVolume(masterVolume * musicVolume);
+            musicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            musicPlayer.play();
+        } catch (Exception e) {
+            System.err.println("[AUDIO] Error playing music: " + e.getMessage());
+        }
     }
 
     public static void stopMusic() {

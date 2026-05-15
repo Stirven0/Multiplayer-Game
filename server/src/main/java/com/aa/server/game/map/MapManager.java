@@ -11,10 +11,10 @@ public class MapManager {
     }
 
     private void loadDefaults() {
-        // Cargar desde JSON en vez de hardcodear
         register(MapLoader.loadFromJson("/maps/map_01.json"));
         register(MapLoader.loadFromJson("/maps/map_02.json"));
         register(MapLoader.loadFromJson("/maps/map_03.json"));
+        register(MapLoader.loadFromJson("/maps/map_04.json"));
     }
 
     private void register(GameMap map) {
@@ -22,11 +22,21 @@ public class MapManager {
     }
 
     public GameMap getMap(String mapId) {
-        return maps.get(mapId);
+        GameMap m = maps.get(mapId);
+        if (m == null) {
+            System.err.println("[MAP] Map not found: " + mapId + ", using default");
+            return getDefaultMap();
+        }
+        return m;
     }
 
     public GameMap getDefaultMap() {
-        return maps.get("map_01");
+        GameMap m = maps.get("map_01");
+        if (m == null) {
+            // fallback: pick first available
+            m = maps.values().stream().findFirst().orElse(null);
+        }
+        return m;
     }
 
     public Map<String, GameMap> getAllMaps() {

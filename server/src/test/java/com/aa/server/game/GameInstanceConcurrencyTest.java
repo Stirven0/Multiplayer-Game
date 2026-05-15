@@ -39,7 +39,7 @@ class GameInstanceConcurrencyTest {
         when(room.getPlayerIds()).thenReturn(Set.of("p1"));
         when(room.getHostId()).thenReturn("p1");
 
-        GameMap map = new GameMap("map_01", 2000, 2000, java.util.List.of());
+        GameMap map = new GameMap("map_01", "Warehouse", 2000, 2000, java.util.List.of());
         instance = new GameInstance("game-1", room, map, connectionManager);
     }
 

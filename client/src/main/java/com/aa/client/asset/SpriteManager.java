@@ -38,7 +38,17 @@ public class SpriteManager {
                 System.err.println("[SPRITE] Missing: " + p);
                 return null;
             }
-            return new Image(stream);
+            try {
+                Image img = new Image(stream);
+                if (img.isError()) {
+                    System.err.println("[SPRITE] Error loading: " + p + " -> " + img.getException());
+                    return null;
+                }
+                return img;
+            } catch (Exception e) {
+                System.err.println("[SPRITE] Exception loading " + p + ": " + e.getMessage());
+                return null;
+            }
         });
     }
 

@@ -15,10 +15,11 @@ public enum MessageType {
     JOIN_ROOM,
     LEAVE_ROOM,
     ROOM_LIST,
-    ROOM_CREATED,      // <-- NUEVO
-    ROOM_UPDATED,      // <-- NUEVO
+    ROOM_LIST_RESPONSE,
+    ROOM_CREATED,
+    ROOM_UPDATED,
     ROOM_UPDATE,
-    JOIN_ROOM_RESPONSE,// <-- NUEVO
+    JOIN_ROOM_RESPONSE,
     GAME_START,
     
     // Inputs del jugador (Cliente → Servidor)
@@ -34,10 +35,12 @@ public enum MessageType {
     ENTITY_DESTROY,  // Entidad eliminada
     PLAYER_HIT,      // Jugador dañado
     PLAYER_DEATH,    // Jugador muerto
+    GAME_END,        // Partida terminada con resultados
     
     // Sistema
     PING,            // Latencia
     PONG,
     ERROR,           // Error genérico
-    DISCONNECT       // Desconexión forzada
+    DISCONNECT,      // Desconexión forzada
+    RECONNECT        // Reconexión después de timeout
 }

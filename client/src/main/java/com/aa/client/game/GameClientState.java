@@ -17,6 +17,10 @@ public class GameClientState {
         currentState.set(state);
     }
 
+    public void setCurrentState(GameState state) {
+        currentState.set(state);
+    }
+
     public GameState getCurrentState() {
         return currentState.get();
     }

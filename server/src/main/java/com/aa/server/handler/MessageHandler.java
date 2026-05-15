@@ -8,6 +8,7 @@ import com.aa.server.network.ClientConnection;
 import com.aa.server.network.ConnectionManager;
 import com.aa.server.room.Room;
 import com.aa.server.room.RoomManager;
+import com.aa.server.util.ServerConfig;
 import com.aa.shared.message.*;
 import com.aa.shared.util.JsonUtil;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class MessageHandler {
             // Rutas públicas
             switch (type) {
                 case LOGIN_REQUEST -> handleLogin(client, json);
+                case RECONNECT -> handleReconnect(client, json);
                 default -> handleAuthenticated(client, json, type);
             }
         } catch (IllegalArgumentException e) {
@@ -74,6 +76,8 @@ public class MessageHandler {
         switch (type) {
             case CREATE_ROOM -> handleCreateRoom(client, json);
             case JOIN_ROOM -> handleJoinRoom(client, json);
+            case LEAVE_ROOM -> handleLeaveRoom(client, json);
+            case ROOM_LIST -> handleRoomList(client);
             case GAME_START -> handleStartGame(client, json);
             case MOVE_INPUT -> handleMove(client, json);
             case SHOOT_INPUT -> handleShoot(client, json);
@@ -89,35 +93,54 @@ public class MessageHandler {
 
     private void handleLogin(ClientConnection client, String json) {
         LoginMessage msg = JsonUtil.fromJson(json, LoginMessage.class);
-        String token = authService.login(msg.getUsername(), msg.getPassword());
+        LoginResponseMessage response = new LoginResponseMessage();
 
+        if (msg.isRegister()) {
+            boolean registered = authService.register(msg.getUsername(), msg.getPassword());
+            if (!registered) {
+                response.setSuccess(false);
+                response.setErrorMessage("El usuario ya existe");
+                client.send(response);
+                return;
+            }
+            System.out.println("[AUTH] Registrado: " + msg.getUsername());
+        }
+
+        // Verificar si el usuario ya está conectado desde otro cliente
+        boolean alreadyConnected = false;
+        for (ClientConnection c : connectionManager.getAll()) {
+            if (c.isAuthenticated() && msg.getUsername().equals(c.getUsername()) && c != client) {
+                alreadyConnected = true;
+                break;
+            }
+        }
+        if (alreadyConnected) {
+            response.setSuccess(false);
+            response.setErrorMessage("El usuario ya está conectado desde otro cliente");
+            client.send(response);
+            return;
+        }
+
+        String token = authService.login(msg.getUsername(), msg.getPassword());
         if (token != null) {
             String userId = authService.getUserId(token);
             client.setUserId(userId);
+            client.setUsername(msg.getUsername());
             connectionManager.authenticate(client.getConnectionId(), userId);
 
-            // Crear respuesta de login
-            // LoginMessage response = new LoginMessage();
-            // response.setType(MessageType.LOGIN_RESPONSE); // ¡Importante cambiar el tipo!
-            // response.setToken(token);
-            // response.setUsername(msg.getUsername());
-
-            LoginResponseMessage response = new LoginResponseMessage();
+            response.setSuccess(true);
             response.setToken(token);
-            response.setUserId(userId); // <-- ESTO FALTABA
+            response.setUserId(userId);
             response.setUsername(msg.getUsername());
 
-            client.send(response);
             System.out.println(
                 "[AUTH] Login exitoso: " + msg.getUsername() + " -> " + userId
             );
         } else {
-            client.sendError(
-                "AUTH_FAILED",
-                "Invalid username or password",
-                false
-            );
+            response.setSuccess(false);
+            response.setErrorMessage("Usuario o contraseña incorrectos");
         }
+        client.send(response);
     }
 
     private void handleCreateRoom(ClientConnection client, String json) {
@@ -157,9 +180,32 @@ public class MessageHandler {
         boolean ok = roomManager.joinRoom(roomId, client.getPlayerId());
         if (ok) {
             client.setCurrentRoomId(roomId);
+            Room room = roomManager.getRoom(roomId);
+            if (room != null) broadcastRoomUpdate(room);
         } else {
             client.sendError("JOIN_FAILED", "Room full or not found", false);
         }
+    }
+
+    private void handleRoomList(ClientConnection client) {
+        java.util.List<RoomListResponseMessage.RoomInfo> infos = new java.util.ArrayList<>();
+        for (Room r : roomManager.listOpenRooms()) {
+            infos.add(new RoomListResponseMessage.RoomInfo(
+                r.getRoomId(), r.getHostId(), r.getMapId(),
+                r.getPlayerCount(), com.aa.server.util.ServerConfig.MAX_PLAYERS_PER_ROOM,
+                r.getStatus().name()
+            ));
+        }
+        client.send(new RoomListResponseMessage(infos));
+    }
+
+    private void handleLeaveRoom(ClientConnection client, String json) {
+        String roomId = client.getCurrentRoomId();
+        if (roomId == null) return;
+        roomManager.leaveRoom(roomId, client.getPlayerId());
+        client.setCurrentRoomId(null);
+        Room room = roomManager.getRoom(roomId);
+        if (room != null) broadcastRoomUpdate(room);
     }
 
     private void handleStartGame(ClientConnection client, String json) {
@@ -171,6 +217,11 @@ public class MessageHandler {
         Room room = roomManager.getRoom(roomId);
         if (room == null || !room.isHost(client.getPlayerId())) {
             client.sendError("FORBIDDEN", "Only host can start", false);
+            return;
+        }
+        if (room.getPlayerCount() < ServerConfig.MIN_PLAYERS_TO_START) {
+            client.sendError("NOT_ENOUGH_PLAYERS",
+                "Need at least " + ServerConfig.MIN_PLAYERS_TO_START + " players to start", false);
             return;
         }
         roomManager.startGame(roomId);
@@ -207,6 +258,37 @@ public class MessageHandler {
         game.queueInput(
             new PlayerInput(client.getPlayerId(), MessageType.SHOOT_INPUT, msg)
         );
+    }
+
+    private void handleReconnect(ClientConnection client, String json) {
+        ReconnectMessage msg = JsonUtil.fromJson(json, ReconnectMessage.class);
+        if (!authService.validateToken(msg.getToken())) {
+            client.sendError("RECONNECT_FAILED", "Token invalido o expirado", false);
+            return;
+        }
+
+        String userId = msg.getUserId();
+        String playerId = userId; // userId == playerId en este sistema
+
+        // Re-autenticar la nueva conexion con el playerId existente
+        client.setPlayerId(playerId);
+        client.setUserId(userId);
+        client.setAuthenticated(true);
+        connectionManager.authenticate(client.getConnectionId(), playerId);
+
+        GameInstance game = gameInstanceManager.getGameByPlayer(playerId);
+        if (game != null && !game.isFinished()) {
+            game.queueReconnect(playerId);
+            System.out.println("[HANDLER] Reconnect exitoso: " + playerId);
+            LoginResponseMessage resp = new LoginResponseMessage();
+            resp.setSuccess(true);
+            resp.setToken(msg.getToken());
+            resp.setUserId(userId);
+            resp.setUsername(userId);
+            client.send(resp);
+        } else {
+            client.sendError("RECONNECT_FAILED", "No hay partida activa", false);
+        }
     }
 
     private String extractStringField(

@@ -1,6 +1,8 @@
 package com.aa.client.ui;
 
 import com.aa.client.game.GameClient;
+import com.aa.shared.message.GameEndMessage;
+import javafx.stage.StageStyle;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -9,6 +11,7 @@ public class ScreenManager {
     private Stage stage;
     private GameClient gameClient;
     private LobbyScreen lobbyScreen;
+    private LoginScreen loginScreen;
 
     public ScreenManager() {
         this.gameClient = new GameClient(this);
@@ -16,15 +19,16 @@ public class ScreenManager {
 
     public void init(Stage stage) {
         this.stage = stage;
-        this.gameClient = new GameClient(this);
+        stage.initStyle(StageStyle.UNDECORATED);
         stage.setTitle(com.aa.client.util.ClientConfig.TITLE);
         showLogin();
         stage.show();
     }
 
     public void showLobby() {
+        gameClient.setCurrentRoomId(null);
         this.lobbyScreen = new LobbyScreen(gameClient);
-        stage.setScene(lobbyScreen.createScene());
+        stage.setScene(lobbyScreen.createScene(stage));
     }
 
     public LobbyScreen getLobbyScreen() {
@@ -32,11 +36,20 @@ public class ScreenManager {
     }
 
     public void showLogin() {
-        stage.setScene(new LoginScreen(gameClient).createScene());
+        this.loginScreen = new LoginScreen(gameClient);
+        stage.setScene(loginScreen.createScene(stage));
+    }
+
+    public void showLoginError(String msg) {
+        if (loginScreen != null) loginScreen.setError(msg);
     }
 
     public void showGame() {
-        stage.setScene(new GameScreen(gameClient).createScene());
+        stage.setScene(new GameScreen(gameClient).createScene(stage));
+    }
+
+    public void showGameOver(GameEndMessage endMsg) {
+        stage.setScene(new GameOverScreen(gameClient, endMsg).createScene(stage));
     }
 
     public GameClient getGameClient() {

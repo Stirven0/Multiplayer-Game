@@ -17,6 +17,12 @@ public final class ServerConfig {
     public static final double BULLET_DAMAGE = 25.0;
     public static final double BULLET_LIFETIME_MS = 5000.0;
 
+    public static final double PLAYER_RADIUS = 15.0;
+    public static final double BULLET_RADIUS = 3.0;
+
     public static final int MAX_PLAYERS_PER_ROOM = 10;
     public static final int MIN_PLAYERS_TO_START = 2;
+
+    public static final long CONNECTION_TIMEOUT_MS = 300_000;  // 5 min sin actividad = desconectado
+    public static final long TIMEOUT_CHECK_INTERVAL_MS = 10_000; // revisar cada 10s
 }

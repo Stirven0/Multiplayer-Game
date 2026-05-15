@@ -1,6 +1,8 @@
 package com.aa.server.game.system;
 
 import com.aa.server.game.PlayerInput;
+import com.aa.server.game.map.GameMap;
+import com.aa.server.util.ServerConfig;
 import com.aa.shared.model.Bullet;
 import com.aa.shared.model.Player;
 import com.aa.shared.state.GameState;
@@ -10,7 +12,7 @@ import java.util.List;
 public class CollisionSystem implements GameSystem {
 
     @Override
-    public void update(GameState state, float deltaTime, List<PlayerInput> inputs) {
+    public void update(GameState state, float deltaTime, List<PlayerInput> inputs, GameMap map) {
         List<Bullet> bullets = state.getAllBullets();
 
         for (Bullet bullet : bullets) {
@@ -22,20 +24,35 @@ public class CollisionSystem implements GameSystem {
             // Mover bala
             bullet.move(deltaTime);
 
+            // Colisión con obstáculos del mapa
+            if (map != null && map.collides(bullet.getPosition(), ServerConfig.BULLET_RADIUS)) {
+                state.removeBullet(bullet.getId());
+                continue;
+            }
+
             // Colisión con jugadores
             for (Player player : state.getAllPlayers()) {
                 if (player.getId().equals(bullet.getOwnerId())) continue;
                 if (!player.isAlive()) continue;
 
                 double dist = player.getPosition().distanceTo(bullet.getPosition());
-                if (dist < 20.0) { // Radio aproximado de impacto
+                if (dist < ServerConfig.PLAYER_RADIUS + ServerConfig.BULLET_RADIUS) {
+                    boolean wasAlive = player.isAlive();
                     player.takeDamage(bullet.getDamage());
                     state.removeBullet(bullet.getId());
+
+                    // Si el jugador murio por este impacto, asignar kill/death
+                    if (wasAlive && !player.isAlive()) {
+                        Player shooter = state.getPlayer(bullet.getOwnerId());
+                        if (shooter != null) {
+                            shooter.setKills(shooter.getKills() + 1);
+                        }
+                        player.setDeaths(player.getDeaths() + 1);
+                    }
+
                     break;
                 }
             }
-
-            // TODO: colisión con obstáculos del mapa
         }
     }
 }
