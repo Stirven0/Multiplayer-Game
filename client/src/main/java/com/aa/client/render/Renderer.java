@@ -185,8 +185,8 @@ public class Renderer {
     }
 
     private void drawDebugOverlay(GraphicsContext gc, GameState state, String localPlayerId) {
-        double cw = gc.getCanvas().getWidth();
-        double ch = gc.getCanvas().getHeight();
+        // double cw = gc.getCanvas().getWidth();
+        // double ch = gc.getCanvas().getHeight();
 
         gc.setFill(Color.rgb(13, 17, 23, 0.75));
         gc.fillRoundRect(5, 5, 240, 170, 6, 6);

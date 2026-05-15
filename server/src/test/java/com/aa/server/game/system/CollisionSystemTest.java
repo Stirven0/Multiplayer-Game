@@ -2,7 +2,6 @@ package com.aa.server.game.system;
 
 import com.aa.server.game.map.GameMap;
 import com.aa.shared.model.Obstacle;
-import com.aa.server.util.ServerConfig;
 import com.aa.shared.model.Bullet;
 import com.aa.shared.model.Player;
 import com.aa.shared.model.Vector2;

@@ -55,7 +55,7 @@ class GameInstanceConcurrencyTest {
         CountDownLatch latch = new CountDownLatch(threads);
 
         for (int t = 0; t < threads; t++) {
-            final int threadId = t;
+            // final int threadId = t;
             executor.submit(() -> {
                 try {
                     for (int i = 0; i < inputsPerThread; i++) {
