@@ -53,7 +53,7 @@ public class ConnectionManager {
     }
 
     public void broadcastToPlayers(Collection<String> playerIds, Message message) {
-        String json = JsonUtil.toJson(message);
+        // String json = JsonUtil.toJson(message);
         for (String pid : playerIds) {
             ClientConnection c = byPlayerId.get(pid);
             if (c != null && c.isOpen()) {

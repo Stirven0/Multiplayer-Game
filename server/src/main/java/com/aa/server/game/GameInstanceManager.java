@@ -11,7 +11,6 @@ import com.aa.shared.model.Player;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.aa.shared.message.Message;
 
 public class GameInstanceManager {
     private final ConcurrentHashMap<String, GameInstance> instances = new ConcurrentHashMap<>();

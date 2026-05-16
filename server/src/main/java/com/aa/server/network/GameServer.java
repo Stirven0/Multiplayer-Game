@@ -7,7 +7,6 @@ import com.aa.server.handler.MessageHandler;
 import com.aa.server.room.RoomManager;
 import com.aa.shared.message.Message;
 import com.aa.shared.message.PingMessage;
-import com.aa.shared.util.JsonUtil;
 import com.aa.server.game.map.MapManager;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;

@@ -2,7 +2,6 @@ package com.aa.client.ui;
 
 import com.aa.client.game.GameClient;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;

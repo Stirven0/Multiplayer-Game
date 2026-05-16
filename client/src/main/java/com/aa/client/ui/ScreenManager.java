@@ -3,7 +3,6 @@ package com.aa.client.ui;
 import com.aa.client.game.GameClient;
 import com.aa.shared.message.GameEndMessage;
 import javafx.stage.StageStyle;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
