@@ -1,11 +1,13 @@
 package com.aa.server.game;
 
+import com.aa.server.db.DatabaseManager;
 import com.aa.server.game.map.GameMap;
 import com.aa.server.game.map.MapManager;
 import com.aa.server.network.ClientConnection;
 import com.aa.server.network.ConnectionManager;
 import com.aa.server.room.Room;
 import com.aa.server.room.RoomManager;
+import com.aa.shared.model.Player;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,7 +33,10 @@ public class GameInstanceManager {
         if (map == null) map = mapManager.getDefaultMap();
 
         GameInstance instance = new GameInstance(room.getRoomId(), room, map, connectionManager);
-        instance.setOnGameEndCallback(() -> cleanupGame(room.getRoomId()));
+        instance.setOnGameEndCallback(() -> {
+            persistStats(instance);
+            cleanupGame(room.getRoomId());
+        });
         instance.setMessageSender((playerId, msg) -> {
             ClientConnection c = connectionManager.getByPlayerId(playerId);
             if (c != null && c.isOpen()) {
@@ -70,6 +75,20 @@ public class GameInstanceManager {
         }
         if (roomManager != null) roomManager.removeRoom(roomId);
         System.out.println("[GAME] Sala y partida limpiadas: " + roomId);
+    }
+
+    private void persistStats(GameInstance instance) {
+        String winnerId = "";
+        for (Player p : instance.getState().getAllPlayers()) {
+            if (p.isAlive()) {
+                winnerId = p.getId();
+                break;
+            }
+        }
+        for (Player p : instance.getState().getAllPlayers()) {
+            boolean won = p.getId().equals(winnerId);
+            DatabaseManager.savePlayerStats(p.getId(), p.getKills(), p.getDeaths(), won);
+        }
     }
 
     public void handleDisconnect(String playerId) {

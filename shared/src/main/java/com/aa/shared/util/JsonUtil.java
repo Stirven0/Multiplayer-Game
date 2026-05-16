@@ -137,6 +137,8 @@ public class JsonUtil {
                 case GAME_START -> Message.class; // o crear GameStartMessage
                 case MOVE_INPUT -> MoveMessage.class;
                 case SHOOT_INPUT -> ShootMessage.class;
+                case SWAP_WEAPON -> SwapWeaponMessage.class;
+                case BUFF_UPDATE -> BuffUpdateMessage.class;
                 case GAME_STATE -> GameStateMessage.class;
                 case GAME_END -> GameEndMessage.class;
                 case ERROR -> ErrorMessage.class;

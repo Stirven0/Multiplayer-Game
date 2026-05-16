@@ -21,16 +21,13 @@ public class CollisionSystem implements GameSystem {
                 continue;
             }
 
-            // Mover bala
             bullet.move(deltaTime);
 
-            // Colisión con obstáculos del mapa
             if (map != null && map.collides(bullet.getPosition(), ServerConfig.BULLET_RADIUS)) {
                 state.removeBullet(bullet.getId());
                 continue;
             }
 
-            // Colisión con jugadores
             for (Player player : state.getAllPlayers()) {
                 if (player.getId().equals(bullet.getOwnerId())) continue;
                 if (!player.isAlive()) continue;
@@ -41,7 +38,6 @@ public class CollisionSystem implements GameSystem {
                     player.takeDamage(bullet.getDamage());
                     state.removeBullet(bullet.getId());
 
-                    // Si el jugador murio por este impacto, asignar kill/death
                     if (wasAlive && !player.isAlive()) {
                         Player shooter = state.getPlayer(bullet.getOwnerId());
                         if (shooter != null) {
@@ -49,7 +45,6 @@ public class CollisionSystem implements GameSystem {
                         }
                         player.setDeaths(player.getDeaths() + 1);
                     }
-
                     break;
                 }
             }

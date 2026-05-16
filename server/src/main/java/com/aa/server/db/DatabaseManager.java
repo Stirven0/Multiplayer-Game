@@ -3,6 +3,8 @@ package com.aa.server.db;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -73,9 +75,68 @@ public final class DatabaseManager {
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
             """);
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS player_stats (
+                    user_id TEXT PRIMARY KEY,
+                    total_kills INTEGER NOT NULL DEFAULT 0,
+                    total_deaths INTEGER NOT NULL DEFAULT 0,
+                    total_wins INTEGER NOT NULL DEFAULT 0,
+                    total_games INTEGER NOT NULL DEFAULT 0,
+                    upgrade_points INTEGER NOT NULL DEFAULT 0
+                )
+            """);
         } catch (SQLException e) {
             throw new RuntimeException("Error initializing database schema", e);
         }
+    }
+
+    public static void savePlayerStats(String userId, int kills, int deaths, boolean won) {
+        String sql = """
+            INSERT INTO player_stats (user_id, total_kills, total_deaths, total_wins, total_games, upgrade_points)
+            VALUES (?, ?, ?, ?, 1, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                total_kills = total_kills + ?,
+                total_deaths = total_deaths + ?,
+                total_wins = total_wins + ?,
+                total_games = total_games + 1,
+                upgrade_points = upgrade_points + ?
+        """;
+        try (Connection conn = getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ps.setInt(2, kills);
+            ps.setInt(3, deaths);
+            ps.setInt(4, won ? 1 : 0);
+            ps.setInt(5, kills); // upgrade points = kills for now
+            ps.setInt(6, kills);
+            ps.setInt(7, deaths);
+            ps.setInt(8, won ? 1 : 0);
+            ps.setInt(9, kills);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DB] Error saving player stats: " + e.getMessage());
+        }
+    }
+
+    public static int[] loadPlayerStats(String userId) {
+        String sql = "SELECT total_kills, total_deaths, total_wins, total_games, upgrade_points FROM player_stats WHERE user_id = ?";
+        try (Connection conn = getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new int[] {
+                    rs.getInt("total_kills"),
+                    rs.getInt("total_deaths"),
+                    rs.getInt("total_wins"),
+                    rs.getInt("total_games"),
+                    rs.getInt("upgrade_points")
+                };
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB] Error loading player stats: " + e.getMessage());
+        }
+        return new int[]{0, 0, 0, 0, 0};
     }
 
 }

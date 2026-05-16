@@ -14,6 +14,11 @@ public class Player {
     private String username;
     private int kills;
     private int deaths;
+    private WeaponType primaryWeapon;
+    private WeaponType secondaryWeapon;
+    private int currentWeaponSlot;
+    private double shield;
+    private int upgradePoints;
     
     // Constructor vacío necesario para deserialización JSON
     public Player() {
@@ -22,6 +27,8 @@ public class Player {
         this.health = 100;
         this.maxHealth = 100;
         this.alive = true;
+        this.primaryWeapon = WeaponType.PISTOL;
+        this.currentWeaponSlot = 0;
     }
     
     public Player(String id, String username, Vector2 position) {
@@ -32,6 +39,8 @@ public class Player {
         this.health = 100;
         this.maxHealth = 100;
         this.alive = true;
+        this.primaryWeapon = WeaponType.PISTOL;
+        this.currentWeaponSlot = 0;
     }
     
     // Getters y Setters
@@ -65,7 +74,31 @@ public class Player {
     public int getDeaths() { return deaths; }
     public void setDeaths(int deaths) { this.deaths = deaths; }
     
+    public WeaponType getPrimaryWeapon() { return primaryWeapon; }
+    public void setPrimaryWeapon(WeaponType primaryWeapon) { this.primaryWeapon = primaryWeapon; }
+    
+    public WeaponType getSecondaryWeapon() { return secondaryWeapon; }
+    public void setSecondaryWeapon(WeaponType secondaryWeapon) { this.secondaryWeapon = secondaryWeapon; }
+    
+    public int getCurrentWeaponSlot() { return currentWeaponSlot; }
+    public void setCurrentWeaponSlot(int currentWeaponSlot) { this.currentWeaponSlot = currentWeaponSlot; }
+    
+    public WeaponType getCurrentWeapon() {
+        return currentWeaponSlot == 0 ? primaryWeapon : (secondaryWeapon != null ? secondaryWeapon : primaryWeapon);
+    }
+    
+    public double getShield() { return shield; }
+    public void setShield(double shield) { this.shield = Math.max(0, shield); }
+    
+    public int getUpgradePoints() { return upgradePoints; }
+    public void setUpgradePoints(int upgradePoints) { this.upgradePoints = upgradePoints; }
+    
     public void takeDamage(double damage) {
+        if (shield > 0) {
+            double absorbed = Math.min(shield, damage);
+            shield -= absorbed;
+            damage -= absorbed;
+        }
         setHealth(this.health - damage);
     }
     

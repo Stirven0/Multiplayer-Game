@@ -11,10 +11,13 @@ import com.aa.shared.state.GameState;
 
 import java.util.List;
 
-/**
- * Autoridad absoluta del movimiento. El servidor calcula posiciones.
- */
 public class MovementSystem implements GameSystem {
+
+    private PowerUpSystem powerUpSystem;
+    private UpgradeSystem upgradeSystem;
+
+    public void setPowerUpSystem(PowerUpSystem p) { this.powerUpSystem = p; }
+    public void setUpgradeSystem(UpgradeSystem u) { this.upgradeSystem = u; }
 
     @Override
     public void update(GameState state, float deltaTime, List<PlayerInput> inputs, GameMap map) {
@@ -25,33 +28,35 @@ public class MovementSystem implements GameSystem {
             Player player = state.getPlayer(input.playerId());
             if (player == null || !player.isAlive()) continue;
 
-            // Validar y clampar inputs
             double dx = clamp(msg.getDx(), -1.0, 1.0);
             double dy = clamp(msg.getDy(), -1.0, 1.0);
 
-            double speed = msg.isSprinting() ? ServerConfig.PLAYER_SPRINT_SPEED : ServerConfig.PLAYER_SPEED;
+            double baseSpeed = msg.isSprinting() ? ServerConfig.PLAYER_SPRINT_SPEED : ServerConfig.PLAYER_SPEED;
+
+            double speedMult = 1.0;
+            if (powerUpSystem != null) speedMult *= powerUpSystem.getSpeedMultiplier(player.getId());
+            if (upgradeSystem != null) speedMult *= upgradeSystem.getSpeedMultiplier(player);
+
+            double speed = baseSpeed * speedMult;
             double dist = speed * deltaTime;
 
-            // Normalizar vector si diagonal
             double mag = Math.sqrt(dx * dx + dy * dy);
             if (mag > 1.0) {
                 dx /= mag;
                 dy /= mag;
             }
 
-            if (mag < 0.01) continue; // Input muerto
+            if (mag < 0.01) continue;
 
             double newX = player.getPosition().x() + dx * dist;
             double newY = player.getPosition().y() + dy * dist;
 
             if (map != null) {
-                // Clampear dentro de los límites del mapa
                 newX = clamp(newX, 0, map.width());
                 newY = clamp(newY, 0, map.height());
 
                 Vector2 newPos = new Vector2(newX, newY);
 
-                // Rechazar movimiento si colisiona con un obstáculo
                 if (map.collides(newPos, ServerConfig.PLAYER_RADIUS)) {
                     continue;
                 }

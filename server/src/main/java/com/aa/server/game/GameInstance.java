@@ -11,7 +11,11 @@ import com.aa.shared.message.GameStateMessage;
 import com.aa.shared.message.IdleWarningMessage;
 import com.aa.shared.message.KickedIdleMessage;
 import com.aa.shared.model.Player;
+import com.aa.shared.model.PowerUpPickup;
+import com.aa.shared.model.PowerUpType;
 import com.aa.shared.model.Vector2;
+import com.aa.shared.model.WeaponPickup;
+import com.aa.shared.model.WeaponType;
 import com.aa.shared.state.GameState;
 
 import java.util.ArrayList;
@@ -20,14 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-/**
- * Instancia de una partida en el servidor.
- * Gestiona el estado del juego, la cola de entrada de jugadores,
- * la detección de inactividad, desconexiones y el bucle de juego.
- */
 public class GameInstance {
     private final String gameId;
     private final Room room;
@@ -43,19 +43,13 @@ public class GameInstance {
     private Runnable onGameEndCallback;
     private BiConsumer<String, com.aa.shared.message.Message> messageSender;
 
+    private final AtomicInteger pickupIdCounter = new AtomicInteger(0);
+
     // Idle tracking
     private final Map<String, Long> lastInputTime = new HashMap<>();
     private final Map<String, Long> idleWarningStart = new HashMap<>();
     private final Map<String, Long> lastWarningSend = new HashMap<>();
 
-    /**
-     * Construye la instancia de partida, crea jugadores con posiciones aleatorias
-     * e inicializa el bucle de juego.
-     * @param gameId identificador único de la partida
-     * @param room sala a la que pertenece la partida
-     * @param mapa mapa de la partida
-     * @param connectionManager gestor de conexiones para broadcast
-     */
     public GameInstance(String gameId, Room room, GameMap map, ConnectionManager connectionManager) {
         this.gameId = gameId;
         this.room = room;
@@ -67,78 +61,81 @@ public class GameInstance {
         this.state.setMapHeight(map.height());
         this.engine = new GameEngine();
 
-        // Spawn players
         for (String playerId : room.getPlayerIds()) {
             Player p = new Player(playerId, playerId, randomSpawn());
             state.addPlayer(p);
         }
 
+        spawnInitialPickups();
+
         this.loop = new GameLoop(this);
     }
 
-    /** Inicia la partida (cambia estado a PLAYING y arranca el bucle). */
+    private void spawnInitialPickups() {
+        List<WeaponPickup> weaponPickups = new ArrayList<>();
+        int numWeapons = 4;
+        for (int i = 0; i < numWeapons; i++) {
+            String wid = "wp_" + pickupIdCounter.incrementAndGet();
+            WeaponType wt = WeaponType.randomSpawnable();
+            Vector2 pos = randomSpawn();
+            weaponPickups.add(new WeaponPickup(wid, pos, wt));
+        }
+        state.setWeaponPickups(weaponPickups);
+
+        List<PowerUpPickup> powerUpPickups = new ArrayList<>();
+        int numPowerUps = 3;
+        for (int i = 0; i < numPowerUps; i++) {
+            String pid = "pp_" + pickupIdCounter.incrementAndGet();
+            PowerUpType type = PowerUpType.values()[(int)(Math.random() * 5)];
+            Vector2 pos = randomSpawn();
+            powerUpPickups.add(new PowerUpPickup(pid, pos, type));
+        }
+        state.setPowerUpPickups(powerUpPickups);
+    }
+
     public void start() {
         state.setStatus(GameState.GameStatus.PLAYING);
         state.setStartTime(System.currentTimeMillis());
         loop.start();
     }
 
-    /** Detiene el bucle de juego. */
     public void stop() {
         loop.stop();
     }
 
-    /** Establece el callback a ejecutar al terminar la partida. */
     public void setOnGameEndCallback(Runnable callback) {
         this.onGameEndCallback = callback;
     }
 
-    /** @return callback de fin de partida */
     public Runnable getOnGameEndCallback() {
         return onGameEndCallback;
     }
 
-    /** Establece el enviador de mensajes para notificaciones individuales (inactividad, etc.). */
     public void setMessageSender(BiConsumer<String, com.aa.shared.message.Message> sender) {
         this.messageSender = sender;
     }
 
-    /** Encola una entrada de jugador para procesar en el próximo tick. */
     public void queueInput(PlayerInput input) {
         inputQueue.offer(input);
     }
 
-    /** @return true si hay entradas pendientes por procesar */
     public boolean hasPendingInputs() {
         return !inputQueue.isEmpty();
     }
 
-    /** @return el gestor de conexiones */
     public ConnectionManager getConnectionManager() { return connectionManager; }
-
-    /** @return el estado actual del juego */
     public GameState getState() { return state; }
-
-    /** @return true si el jugador está en la sala */
     public boolean hasPlayer(String playerId) {
         return room.getPlayerIds().contains(playerId);
     }
-
-    /** @return conjunto de IDs de jugadores en la sala */
     public java.util.Set<String> getRoomPlayerIds() {
         return room.getPlayerIds();
     }
 
-    /**
-     * Procesa un tick del juego: entrada de jugadores, desconexiones,
-     * reconexiones, actualización del motor y detección de fin de partida.
-     * @param deltaTime tiempo transcurrido desde el último tick en segundos
-     */
     public void processTick(float deltaTime) {
         if (state.getStatus() == GameState.GameStatus.FINISHED) return;
         long now = System.currentTimeMillis();
 
-        // Procesar desconexiones encoladas desde hilos externos
         String disconnectedId;
         while ((disconnectedId = disconnectQueue.poll()) != null) {
             Player p = state.getPlayer(disconnectedId);
@@ -148,7 +145,6 @@ public class GameInstance {
             }
         }
 
-        // Procesar reconexiones encoladas desde hilos externos
         String reconnectedId;
         while ((reconnectedId = reconnectQueue.poll()) != null) {
             Player p = state.getPlayer(reconnectedId);
@@ -159,35 +155,72 @@ public class GameInstance {
             }
         }
 
-        List<PlayerInput> inputs = new ArrayList<>();
+        // Process inputs: handle SWAP_WEAPON inline, pass rest to engine
+        List<PlayerInput> engineInputs = new ArrayList<>();
         while (!inputQueue.isEmpty()) {
             PlayerInput input = inputQueue.poll();
-            inputs.add(input);
+            if (input.type() == com.aa.shared.message.MessageType.SWAP_WEAPON) {
+                handleSwapWeapon(input.playerId());
+            } else {
+                engineInputs.add(input);
+            }
             lastInputTime.put(input.playerId(), now);
         }
 
+        // Handle weapon pickup collisions
+        checkWeaponPickups();
+
         state.incrementTick();
         state.setTimestamp(now);
-        engine.update(state, deltaTime, inputs, map);
+        engine.update(state, deltaTime, engineInputs, map);
 
-        // Detectar fin de partida: <= 1 jugador vivo
         long aliveCount = state.getAllPlayers().stream().filter(Player::isAlive).count();
         if (aliveCount <= 1) {
             state.setStatus(GameState.GameStatus.FINISHED);
             state.setEndTime(now);
         }
 
-        // Detectar jugadores inactivos (solo durante la partida)
         if (state.getStatus() == GameState.GameStatus.PLAYING) {
             checkIdlePlayers(now);
         }
     }
 
-    /**
-     * Verifica jugadores inactivos y envía advertencias progresivas.
-     * Si el jugador supera IDLE_THRESHOLD_MS sin input, comienza una
-     * cuenta regresiva de IDLE_WARNING_DURATION_MS antes de expulsarlo.
-     */
+    private void handleSwapWeapon(String playerId) {
+        Player player = state.getPlayer(playerId);
+        if (player == null) return;
+        if (player.getSecondaryWeapon() == null) return;
+        int slot = player.getCurrentWeaponSlot();
+        player.setCurrentWeaponSlot(slot == 0 ? 1 : 0);
+    }
+
+    private void checkWeaponPickups() {
+        List<WeaponPickup> pickups = state.getWeaponPickups();
+        List<WeaponPickup> collected = new ArrayList<>();
+
+        for (WeaponPickup wp : pickups) {
+            for (Player player : state.getAllPlayers()) {
+                if (!player.isAlive()) continue;
+                double dist = player.getPosition().distanceTo(wp.getPosition());
+                if (dist < ServerConfig.PLAYER_RADIUS + 20) {
+                    if (player.getSecondaryWeapon() == null) {
+                        player.setSecondaryWeapon(wp.getWeaponType());
+                    } else {
+                        player.setPrimaryWeapon(wp.getWeaponType());
+                        player.setCurrentWeaponSlot(0);
+                    }
+                    collected.add(wp);
+                    break;
+                }
+            }
+        }
+
+        if (!collected.isEmpty()) {
+            List<WeaponPickup> remaining = new ArrayList<>(pickups);
+            remaining.removeAll(collected);
+            state.setWeaponPickups(remaining);
+        }
+    }
+
     private void checkIdlePlayers(long now) {
         for (Player p : state.getAllPlayers()) {
             if (!p.isAlive()) continue;
@@ -236,24 +269,16 @@ public class GameInstance {
         }
     }
 
-    /**
-     * Envía una copia del estado del juego a todos los jugadores de la sala.
-     */
     public void broadcastState() {
         GameState snapshot = state.copy();
         GameStateMessage msg = new GameStateMessage(snapshot, sequence++);
         connectionManager.broadcastToPlayers(room.getPlayerIds(), msg);
     }
 
-    /** @return true si la partida ha terminado */
     public boolean isFinished() {
         return state.getStatus() == GameState.GameStatus.FINISHED;
     }
 
-    /**
-     * Crea el mensaje de fin de partida con las puntuaciones finales.
-     * @return GameEndMessage con ganador y puntuaciones ordenadas
-     */
     public GameEndMessage createGameEndMessage() {
         Player winner = null;
         for (Player p : state.getAllPlayers()) {
@@ -277,24 +302,15 @@ public class GameInstance {
         return new GameEndMessage(gameId, finalWinnerId, finalWinnerUsername, scores, duration);
     }
 
-    /**
-     * Marca a un jugador como desconectado (lo elimina de la cola de entrada
-     * y lo encola para procesar su muerte en el próximo tick).
-     */
     public void markPlayerDisconnected(String playerId) {
         inputQueue.removeIf(in -> in.playerId().equals(playerId));
         disconnectQueue.offer(playerId);
     }
 
-    /** Encola una solicitud de reconexión para un jugador. */
     public void queueReconnect(String playerId) {
         reconnectQueue.offer(playerId);
     }
 
-    /**
-     * Genera una posición de aparición aleatoria dentro del mapa.
-     * @return Vector2 con coordenadas aleatorias
-     */
     public Vector2 randomSpawn() {
         double x = Math.random() * (map.width() - 100) + 50;
         double y = Math.random() * (map.height() - 100) + 50;

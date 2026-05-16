@@ -3,6 +3,8 @@ package com.aa.shared.state;
 import com.aa.shared.model.Obstacle;
 import com.aa.shared.model.Player;
 import com.aa.shared.model.Bullet;
+import com.aa.shared.model.WeaponPickup;
+import com.aa.shared.model.PowerUpPickup;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +37,10 @@ public class GameState {
     private List<Obstacle> obstacles = Collections.emptyList();
     private double mapWidth;
     private double mapHeight;
+    
+    // Pickups
+    private List<WeaponPickup> weaponPickups = Collections.emptyList();
+    private List<PowerUpPickup> powerUpPickups = Collections.emptyList();
     
     public enum GameStatus {
         WAITING,    // Esperando jugadores
@@ -123,6 +129,12 @@ public class GameState {
     public long getEndTime() { return endTime; }
     public void setEndTime(long endTime) { this.endTime = endTime; }
     
+    public List<WeaponPickup> getWeaponPickups() { return weaponPickups; }
+    public void setWeaponPickups(List<WeaponPickup> weaponPickups) { this.weaponPickups = weaponPickups; }
+    
+    public List<PowerUpPickup> getPowerUpPickups() { return powerUpPickups; }
+    public void setPowerUpPickups(List<PowerUpPickup> powerUpPickups) { this.powerUpPickups = powerUpPickups; }
+    
     /**
      * Crea una copia superficial del estado para serialización.
      * Útil para enviar snapshots sin bloquear el estado real.
@@ -139,6 +151,8 @@ public class GameState {
         copy.obstacles = this.obstacles;
         copy.mapWidth = this.mapWidth;
         copy.mapHeight = this.mapHeight;
+        copy.weaponPickups = this.weaponPickups;
+        copy.powerUpPickups = this.powerUpPickups;
         
         // Copiar jugadores y balas
         for (Player p : this.players.values()) {
@@ -149,6 +163,11 @@ public class GameState {
             pCopy.setAlive(p.isAlive());
             pCopy.setKills(p.getKills());
             pCopy.setDeaths(p.getDeaths());
+            pCopy.setPrimaryWeapon(p.getPrimaryWeapon());
+            pCopy.setSecondaryWeapon(p.getSecondaryWeapon());
+            pCopy.setCurrentWeaponSlot(p.getCurrentWeaponSlot());
+            pCopy.setShield(p.getShield());
+            pCopy.setUpgradePoints(p.getUpgradePoints());
             copy.addPlayer(pCopy);
         }
         

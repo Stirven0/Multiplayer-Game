@@ -4,6 +4,10 @@ import com.aa.client.asset.SpriteManager;
 import com.aa.shared.model.Bullet;
 import com.aa.shared.model.Obstacle;
 import com.aa.shared.model.Player;
+import com.aa.shared.model.PowerUpPickup;
+import com.aa.shared.model.PowerUpType;
+import com.aa.shared.model.WeaponPickup;
+import com.aa.shared.model.WeaponType;
 import com.aa.shared.state.GameState;
 import java.util.List;
 import javafx.scene.canvas.GraphicsContext;
@@ -41,6 +45,8 @@ public class Renderer {
 
         drawGrid(gc);
         drawObstacles(gc, state.getObstacles());
+        drawWeaponPickups(gc, state.getWeaponPickups());
+        drawPowerUpPickups(gc, state.getPowerUpPickups());
 
         for (Player p : state.getAllPlayers()) {
             boolean isLocal = p.getId().equals(localPlayerId);
@@ -86,12 +92,65 @@ public class Renderer {
             double sh = o.height();
             gc.fillRect(sx, sy, sw, sh);
             gc.strokeRect(sx, sy, sw, sh);
-            // subtle inner glow
             gc.setStroke(Color.rgb(88, 166, 255, 0.08));
             gc.setLineWidth(1);
             gc.strokeRect(sx + 3, sy + 3, sw - 6, sh - 6);
             gc.setStroke(Color.rgb(48, 54, 61));
             gc.setLineWidth(2);
+        }
+    }
+
+    private void drawWeaponPickups(GraphicsContext gc, List<WeaponPickup> pickups) {
+        if (pickups == null) return;
+        for (WeaponPickup wp : pickups) {
+            double sx = camera.worldToScreenX(wp.getPosition().x());
+            double sy = camera.worldToScreenY(wp.getPosition().y());
+            double size = 20;
+
+            gc.setFill(Color.rgb(88, 166, 255, 0.25));
+            gc.fillOval(sx - size/2 - 2, sy - size/2 - 2, size + 4, size + 4);
+            gc.setFill(Color.rgb(88, 166, 255));
+            gc.setFont(Font.font("Monospace", 11));
+            gc.setTextAlign(TextAlignment.CENTER);
+            String label = switch (wp.getWeaponType()) {
+                case SHOTGUN -> "W";
+                case RIFLE -> "R";
+                case SNIPER -> "S";
+                case SMG -> "M";
+                default -> "?";
+            };
+            gc.fillText(label, sx, sy + 4);
+
+            gc.setFont(Font.font("Monospace", 9));
+            gc.setFill(Color.rgb(139, 148, 158));
+            gc.fillText(wp.getWeaponType().getDisplayName(), sx, sy + size/2 + 12);
+        }
+    }
+
+    private void drawPowerUpPickups(GraphicsContext gc, List<PowerUpPickup> pickups) {
+        if (pickups == null) return;
+        for (PowerUpPickup pp : pickups) {
+            double sx = camera.worldToScreenX(pp.getPosition().x());
+            double sy = camera.worldToScreenY(pp.getPosition().y());
+            double size = 16;
+
+            Color bg = pp.getType().isDebuff() ? Color.rgb(248, 81, 73, 0.3) : Color.rgb(46, 160, 67, 0.3);
+            gc.setFill(bg);
+            gc.fillRoundRect(sx - size/2, sy - size/2, size, size, 4, 4);
+
+            gc.setFill(pp.getType().isDebuff() ? Color.rgb(248, 81, 73) : Color.rgb(46, 160, 67));
+            gc.setFont(Font.font("Monospace", 10));
+            gc.setTextAlign(TextAlignment.CENTER);
+            String label = switch (pp.getType()) {
+                case SPEED -> ">>";
+                case DAMAGE_BOOST -> "+D";
+                case FIRE_RATE -> ">>|";
+                case SHIELD -> "[]";
+                case HEALTH_PACK -> "+";
+                case SLOW -> "<<";
+                case WEAKNESS -> "-D";
+            };
+            gc.fillText(label, sx, sy + 4);
         }
     }
 
@@ -113,7 +172,6 @@ public class Renderer {
             Color fill = isLocal ? Color.rgb(88, 166, 255) : Color.rgb(248, 81, 73);
             gc.setFill(fill);
             gc.fillOval(sx - r, sy - r, size, size);
-            // outer ring
             gc.setStroke(fill.deriveColor(0, 1, 1, 0.5));
             gc.setLineWidth(2);
             gc.strokeOval(sx - r - 2, sy - r - 2, size + 4, size + 4);
@@ -156,10 +214,8 @@ public class Renderer {
         if (sprite != null) {
             gc.drawImage(sprite, sx - 4, sy - 4, 8, 8);
         } else {
-            // glow
             gc.setFill(Color.rgb(255, 166, 0, 0.3));
             gc.fillOval(sx - 5, sy - 5, 10, 10);
-            // core
             gc.setFill(Color.rgb(255, 200, 50));
             gc.fillOval(sx - 2.5, sy - 2.5, 5, 5);
         }
@@ -178,7 +234,6 @@ public class Renderer {
             gc.strokeLine(mx + gap, my, mx + len + gap, my);
             gc.strokeLine(mx, my - len - gap, mx, my - gap);
             gc.strokeLine(mx, my + gap, mx, my + len + gap);
-            // center dot
             gc.setFill(Color.rgb(240, 246, 252, 0.4));
             gc.fillOval(mx - 1.5, my - 1.5, 3, 3);
         }
@@ -189,10 +244,10 @@ public class Renderer {
         double ch = gc.getCanvas().getHeight();
 
         gc.setFill(Color.rgb(13, 17, 23, 0.75));
-        gc.fillRoundRect(5, 5, 240, 170, 6, 6);
+        gc.fillRoundRect(5, 5, 240, 200, 6, 6);
         gc.setStroke(Color.rgb(48, 54, 61));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(5, 5, 240, 170, 6, 6);
+        gc.strokeRoundRect(5, 5, 240, 200, 6, 6);
 
         gc.setFill(Color.rgb(88, 166, 255));
         gc.setFont(Font.font("Monospace", 12));
@@ -210,6 +265,8 @@ public class Renderer {
         if (local != null) {
             gc.fillText("Pos: %.0f, %.0f".formatted(local.getPosition().x(), local.getPosition().y()), 12, y); y += lh;
             gc.fillText("HP: %.0f".formatted(local.getHealth()), 12, y); y += lh;
+            gc.fillText("Arma: " + local.getCurrentWeapon().getDisplayName(), 12, y); y += lh;
+            gc.fillText("Puntos mejora: " + local.getUpgradePoints(), 12, y); y += lh;
             String status = state.getStatus() != null ? state.getStatus().name() : "?";
             gc.fillText("Estado: " + status, 12, y); y += lh;
         }
@@ -242,10 +299,11 @@ public class Renderer {
         if (local == null) return;
 
         double cw = gc.getCanvas().getWidth();
+        double ch = gc.getCanvas().getHeight();
 
         // bottom-left: HP bar large
         double hpX = 16;
-        double hpY = gc.getCanvas().getHeight() - 40;
+        double hpY = ch - 40;
         double hpW = 180;
         double hpH = 16;
         gc.setFill(Color.rgb(13, 17, 23, 0.8));
@@ -269,6 +327,50 @@ public class Renderer {
         gc.setFont(Font.font("Monospace", 11));
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.fillText((int) local.getHealth() + " HP", hpX + hpW - 6, hpY + 12);
+
+        // Shield bar (below HP)
+        if (local.getShield() > 0) {
+            double shY = hpY + hpH + 4;
+            double shW = 180;
+            double shH = 6;
+            gc.setFill(Color.rgb(13, 17, 23, 0.8));
+            gc.fillRoundRect(hpX, shY, shW, shH, 3, 3);
+            double shieldRatio = Math.min(local.getShield() / 40.0, 1.0);
+            gc.setFill(Color.rgb(88, 166, 255));
+            gc.fillRoundRect(hpX + 1, shY + 1, (shW - 2) * shieldRatio, shH - 2, 2, 2);
+        }
+
+        // Weapon info (bottom-right)
+        double wX = cw - 200;
+        double wY = ch - 60;
+        gc.setFill(Color.rgb(13, 17, 23, 0.8));
+        gc.fillRoundRect(wX, wY, 190, 50, 6, 6);
+        gc.setStroke(Color.rgb(48, 54, 61));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(wX, wY, 190, 50, 6, 6);
+
+        WeaponType current = local.getCurrentWeapon();
+        gc.setFill(Color.rgb(88, 166, 255));
+        gc.setFont(Font.font("Monospace", 14));
+        gc.setTextAlign(TextAlignment.LEFT);
+        gc.fillText(current.getDisplayName(), wX + 10, wY + 20);
+
+        gc.setFill(Color.rgb(139, 148, 158));
+        gc.setFont(Font.font("Monospace", 10));
+        gc.fillText("Slot: " + (local.getCurrentWeaponSlot() == 0 ? "1" : "2") + "  [Q]", wX + 10, wY + 40);
+
+        if (local.getSecondaryWeapon() != null) {
+            gc.setFill(Color.rgb(48, 54, 61));
+            gc.fillText("Slot " + (local.getCurrentWeaponSlot() == 0 ? "2" : "1") + ": " + local.getSecondaryWeapon().getDisplayName(), wX + 10, wY + 55);
+        }
+
+        // Upgrade points
+        if (local.getUpgradePoints() > 0) {
+            gc.setFill(Color.rgb(210, 153, 34));
+            gc.setFont(Font.font("Monospace", 11));
+            gc.setTextAlign(TextAlignment.RIGHT);
+            gc.fillText("Mejora x" + local.getUpgradePoints(), cw - 16, ch - 80);
+        }
 
         // Scoreboard (top-right)
         double sbX = cw - 200;

@@ -7,8 +7,8 @@ package com.aa.server.util;
 public final class ServerConfig {
     private ServerConfig() {}
 
-    /** Ticks del bucle de juego por segundo (20 Hz). */
-    public static final int TICK_RATE = 20;
+    /** Ticks del bucle de juego por segundo (30 Hz). */
+    public static final int TICK_RATE = 30;
     /** Duración de cada tick en segundos. */
     public static final float TICK_DURATION_SECONDS = 1.0f / TICK_RATE;
     /** Duración de cada tick en milisegundos. */

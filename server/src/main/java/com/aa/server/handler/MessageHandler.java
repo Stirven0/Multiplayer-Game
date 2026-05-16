@@ -102,6 +102,7 @@ public class MessageHandler {
             case GAME_START -> handleStartGame(client, json);
             case MOVE_INPUT -> handleMove(client, json);
             case SHOOT_INPUT -> handleShoot(client, json);
+            case SWAP_WEAPON -> handleSwapWeapon(client);
             case PING, PONG -> {
                 /* heartbeat, no hacer nada */
             }
@@ -292,6 +293,13 @@ public class MessageHandler {
         game.queueInput(
             new PlayerInput(client.getPlayerId(), MessageType.SHOOT_INPUT, msg)
         );
+    }
+
+    /** Cambia el slot de arma activo del jugador (primaria ↔ secundaria). */
+    private void handleSwapWeapon(ClientConnection client) {
+        GameInstance game = gameInstanceManager.getGameByPlayer(client.getPlayerId());
+        if (game == null) return;
+        game.queueInput(new PlayerInput(client.getPlayerId(), MessageType.SWAP_WEAPON, null));
     }
 
     /** Procesa una solicitud de reconexión validando el token y re-asignando la conexión. */

@@ -25,11 +25,14 @@ public enum MessageType {
     // Inputs del jugador (Cliente → Servidor)
     MOVE_INPUT,      // Movimiento continuo
     SHOOT_INPUT,     // Disparo
+    SWAP_WEAPON,     // Cambiar arma primaria/secundaria
+    PICKUP,          // Recoger arma o power-up del mapa
     ROTATE_INPUT,    // Cambio de dirección
     USE_ABILITY,     // Habilidad especial (futuro)
     
     // Estado del juego (Servidor → Cliente)
     GAME_STATE,      // Snapshot completo
+    BUFF_UPDATE,     // Actualización de buffs/debuffs activos
     DELTA_STATE,     // Cambios parciales (futuro)
     ENTITY_SPAWN,    // Nueva entidad creada
     ENTITY_DESTROY,  // Entidad eliminada

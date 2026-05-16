@@ -10,6 +10,7 @@ import com.aa.client.ui.ScreenManager;
 import com.aa.client.util.ClientConfig;
 import com.aa.shared.message.*;
 import com.aa.shared.model.Player;
+import com.aa.shared.model.WeaponType;
 import com.aa.shared.state.GameState;
 import com.google.gson.JsonObject;
 import java.net.URI;
@@ -37,6 +38,7 @@ public class GameClient implements ClientMessageListener {
     private volatile boolean showDebug = false;
     private volatile double fps = 0;
     private volatile int idleWarningSeconds = 0;
+    private volatile java.util.List<BuffUpdateMessage.ActiveBuff> activeBuffs = java.util.Collections.emptyList();
 
     /**
      * Construye el GameClient y sus componentes internos.
@@ -201,6 +203,8 @@ public class GameClient implements ClientMessageListener {
     /** @return segundos restantes antes de expulsión por inactividad (0 = sin advertencia) */
     public int getIdleWarningSeconds() { return idleWarningSeconds; }
 
+    public java.util.List<BuffUpdateMessage.ActiveBuff> getActiveBuffs() { return activeBuffs; }
+
     /** Establece los segundos de advertencia por inactividad. */
     public void setIdleWarningSeconds(int seconds) { this.idleWarningSeconds = seconds; }
 
@@ -235,6 +239,9 @@ public class GameClient implements ClientMessageListener {
                             network.sendMessage(new ShootMessage(angle));
                             input.clearShoot();
                         }
+                    }
+                    if (input.consumeSwapWeapon()) {
+                        network.sendMessage(new SwapWeaponMessage());
                     }
                 }
 
@@ -385,6 +392,10 @@ public class GameClient implements ClientMessageListener {
                     if (screenManager.getLobbyScreen() != null) {
                         screenManager.getLobbyScreen().setError("Has sido expulsado por inactividad");
                     }
+                }
+                case BUFF_UPDATE -> {
+                    BuffUpdateMessage bum = (BuffUpdateMessage) msg;
+                    activeBuffs = bum.getBuffs();
                 }
                 case GAME_END -> {
                     GameEndMessage gem = (GameEndMessage) msg;
