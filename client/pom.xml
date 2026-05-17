@@ -53,6 +53,12 @@
             <version>2.10.1</version>
         </dependency>
 
+        <!-- MCP SDK -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp</artifactId>
+        </dependency>
+
         <!-- TestFX -->
         <dependency>
             <groupId>org.testfx</groupId>

@@ -243,6 +243,12 @@ public class GameClient implements ClientMessageListener {
                     if (input.consumeSwapWeapon()) {
                         network.sendMessage(new SwapWeaponMessage());
                     }
+                    if (input.consumeSkillSlot0()) {
+                        network.sendMessage(new UseSkillMessage(0));
+                    }
+                    if (input.consumeSkillSlot1()) {
+                        network.sendMessage(new UseSkillMessage(1));
+                    }
                 }
 
                 Player local = getLocalPlayer();
@@ -397,6 +403,7 @@ public class GameClient implements ClientMessageListener {
                     BuffUpdateMessage bum = (BuffUpdateMessage) msg;
                     activeBuffs = bum.getBuffs();
                 }
+                case USE_SKILL -> System.out.println("[CLIENT] Skill used");
                 case GAME_END -> {
                     GameEndMessage gem = (GameEndMessage) msg;
                     state.setInGame(false);

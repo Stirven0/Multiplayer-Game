@@ -3,6 +3,7 @@ package com.aa.client.ui;
 import com.aa.client.asset.AudioManager;
 import com.aa.client.game.GameClient;
 import com.aa.client.input.InputHandler;
+import com.aa.client.mcp.ClientMcpServer;
 import com.aa.client.util.ClientConfig;
 import java.util.function.Consumer;
 import javafx.animation.AnimationTimer;
@@ -114,6 +115,14 @@ public class GameScreen {
             }
         };
         gameLoop.start();
+
+        if (gameClient.getScreenManager().getMcpServer() == null) {
+            ClientMcpServer mcpServer = new ClientMcpServer(
+                gameClient, gameClient.getInputHandler(),
+                gameClient.getRenderer(), canvas);
+            gameClient.getScreenManager().setMcpServer(mcpServer);
+            mcpServer.start();
+        }
 
         return scene;
     }

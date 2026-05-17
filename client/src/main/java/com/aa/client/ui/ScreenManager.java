@@ -1,6 +1,7 @@
 package com.aa.client.ui;
 
 import com.aa.client.game.GameClient;
+import com.aa.client.mcp.ClientMcpServer;
 import com.aa.shared.message.GameEndMessage;
 import javafx.stage.StageStyle;
 import javafx.stage.Stage;
@@ -15,6 +16,7 @@ public class ScreenManager {
     private GameClient gameClient;
     private LobbyScreen lobbyScreen;
     private LoginScreen loginScreen;
+    private volatile ClientMcpServer mcpServer;
 
     /** Crea el gestor de pantallas e inicializa el GameClient asociado. */
     public ScreenManager() {
@@ -80,6 +82,13 @@ public class ScreenManager {
     public GameClient getGameClient() {
         return gameClient;
     }
+
+    public void enableMcpMode() {
+        System.out.println("[SCREEN] MCP mode enabled");
+    }
+
+    public ClientMcpServer getMcpServer() { return mcpServer; }
+    public void setMcpServer(ClientMcpServer mcpServer) { this.mcpServer = mcpServer; }
 
     /** @return el Stage principal de la aplicación */
     public Stage getStage() { return stage; }
