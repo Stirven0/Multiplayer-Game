@@ -5,7 +5,6 @@ import com.aa.shared.model.Bullet;
 import com.aa.shared.model.Obstacle;
 import com.aa.shared.model.Player;
 import com.aa.shared.model.PowerUpPickup;
-import com.aa.shared.model.PowerUpType;
 import com.aa.shared.model.WeaponPickup;
 import com.aa.shared.model.WeaponType;
 import com.aa.shared.state.GameState;

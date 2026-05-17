@@ -16,8 +16,8 @@ python tools/load_test.py 5                 # stress test (5 bots)
 ```bash
 mvn test -pl server                         # 57 tests server
 mvn test -pl server -Dtest="!*IntegrationTest"  # solo unitarias
-Xvfb :99 -ac -screen 0 1280x720x24 &       # iniciar display virtual
-DISPLAY=:99 mvn test -pl client             # 20 tests UI (requiere Xvfb)
+Xvfb :99 -ac -screen 0 1280x720x24 &       # iniciar display virtual (solo Linux)
+DISPLAY=:99 mvn test -pl client             # 20 tests UI (Linux con Xvfb; en Windows: `mvn test -pl client` directo)
 mvn test -pl server,client                  # ambos módulos
 ```
 
@@ -26,9 +26,9 @@ mvn test -pl server,client                  # ambos módulos
 - **Thread safety**: Only GameLoop mutates GameState. Network thread enqueues inputs via ConcurrentLinkedQueue.
 - **JSON**: Use `JsonUtil.toJson()` / `parseMessage()` exclusively. Never manual parse except for lobby messages in MessageHandler.
 - **Broadcast**: Always `state.copy()` before serializing. Never send mutable GameState reference.
-- **GameLoop**: Fixed 30Hz timestep (configurable en `ServerConfig.TICK_RATE`). Drift resets `nextTick` to avoid death spiral.
+- **GameLoop**: Fixed 30Hz timestep (configurable en `ServerConfig.TICK_RATE`). Drift resets `nextTick` to avoid death spiral. (README dice 20Hz — está desactualizado, el real es 30.)
 - **Weapon System**: 5 tipos (PISTOL/SHOTGUN/RIFLE/SNIPER/SMG), 2 slots (primaria/secundaria), Q para swap. Stats embebidos en enum `WeaponType`. Pickups spawn aleatorios en mapa.
-- **Power-ups**: 7 tipos (Speed/Damage+/FireRate/Shield/Health, Slow/Debilidad como debuffs). Temporales (15s) con respawn. Se recogen automáticamente al colisionar.
+- **Power-ups**: 7 tipos (Speed/Damage+/FireRate/Shield/Health, Slow/Debilidad como debuffs). Buffs 8s, debuffs 4s, respawn 15s. Se recogen automáticamente al colisionar.
 - **Upgrade System**: 5 niveles por kills acumulados en partida (2/5/9/14/20). Mejoras pasivas: daño, cadencia, velocidad, HP max, reducción daño. Persiste al morir.
 - **DB persistence**: Tabla `player_stats` (total_kills, total_deaths, total_wins, total_games, upgrade_points). Stats persistidos vía `DatabaseManager.savePlayerStats()` al terminar partida.
 
@@ -40,6 +40,7 @@ mvn test -pl server,client                  # ambos módulos
 - **PING/PONG**: Server tracks nothing. Client ignores PING, server ignores PONG. No latency tracking.
 - **Byte Buddy + JDK 25**: Requiere `-Dnet.bytebuddy.experimental=true` en argLine del surefire plugin para mockear con Mockito.
 - **ServerConfig hardcodes values**: No carga .env pese a existir `.env.example`. Editar ServerConfig.java para cambiar TICK_RATE, PLAYER_SPEED, BULLET_DAMAGE, IDLE_THRESHOLD, etc.
+- **DatabaseManager usa System.getProperty()**: Pasar `-DDB_URL=...` para DB distinta, o acepta default `jdbc:sqlite:shooter.db`. `.env.example` no se lee. HikariCP + SQLite (PostgreSQL también soportado). `initForTest()` usa SQLite in-memory.
 - **No CI/CD**: No .github, no Actions, no pre-commit hooks.
 - **Unused MessageType values**: `ROTATE_INPUT`, `USE_ABILITY`, `DELTA_STATE`, `ENTITY_SPAWN`, `ENTITY_DESTROY`, `PLAYER_HIT`, `PLAYER_DEATH` definidos en enum pero sin cablear en MessageAdapter ni handlers.
 
