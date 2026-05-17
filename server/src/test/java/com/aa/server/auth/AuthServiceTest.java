@@ -1,14 +1,20 @@
 package com.aa.server.auth;
 
+import com.aa.server.db.DatabaseManager;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuthServiceTest {
 
     private AuthService authService;
+
+    @BeforeAll
+    static void initDb() {
+        DatabaseManager.initForTest();
+    }
 
     @BeforeEach
     void setUp() {
@@ -19,7 +25,6 @@ class AuthServiceTest {
     @DisplayName("Debe autenticar con credenciales válidas y retornar token")
     void loginWithValidCredentialsReturnsToken() {
         String token = authService.login("player1", "pass1");
-
         assertNotNull(token);
         assertFalse(token.isBlank());
         assertTrue(authService.validateToken(token));
@@ -28,9 +33,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("Debe rechazar credenciales inválidas")
     void loginWithInvalidCredentialsReturnsNull() {
-        String token = authService.login("player1", "wrongpass");
-
-        assertNull(token);
+        assertNull(authService.login("player1", "wrongpass"));
     }
 
     @Test
@@ -38,7 +41,6 @@ class AuthServiceTest {
     void getUserIdWithValidToken() {
         String token = authService.login("player1", "pass1");
         String userId = authService.getUserId(token);
-
         assertNotNull(userId);
     }
 
@@ -53,7 +55,6 @@ class AuthServiceTest {
     void registerAndLoginNewUser() {
         authService.register("newplayer", "newpass");
         String token = authService.login("newplayer", "newpass");
-
         assertNotNull(token);
         assertTrue(authService.validateToken(token));
     }

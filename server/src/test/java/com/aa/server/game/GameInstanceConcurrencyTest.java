@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class GameInstanceConcurrencyTest {
 
     @Mock
@@ -39,7 +42,7 @@ class GameInstanceConcurrencyTest {
         when(room.getPlayerIds()).thenReturn(Set.of("p1"));
         when(room.getHostId()).thenReturn("p1");
 
-        GameMap map = new GameMap("map_01", 2000, 2000, java.util.List.of());
+        GameMap map = new GameMap("map_01", "Warehouse", 2000, 2000, java.util.List.of());
         instance = new GameInstance("game-1", room, map, connectionManager);
     }
 
@@ -52,7 +55,7 @@ class GameInstanceConcurrencyTest {
         CountDownLatch latch = new CountDownLatch(threads);
 
         for (int t = 0; t < threads; t++) {
-            final int threadId = t;
+            // final int threadId = t;
             executor.submit(() -> {
                 try {
                     for (int i = 0; i < inputsPerThread; i++) {

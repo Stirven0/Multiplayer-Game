@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
     private final ConcurrentHashMap<String, ClientConnection> byConnectionId = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ClientConnection> byPlayerId = new ConcurrentHashMap<>();
-
     public void register(WebSocket socket) {
         ClientConnection conn = new ClientConnection(socket);
         socket.setAttachment(conn.getConnectionId());
@@ -54,7 +53,7 @@ public class ConnectionManager {
     }
 
     public void broadcastToPlayers(Collection<String> playerIds, Message message) {
-        String json = JsonUtil.toJson(message);
+        // String json = JsonUtil.toJson(message);
         for (String pid : playerIds) {
             ClientConnection c = byPlayerId.get(pid);
             if (c != null && c.isOpen()) {

@@ -1,4 +1,6 @@
 package com.aa.server;
+
+import com.aa.server.db.DatabaseManager;
 import com.aa.server.network.GameServer;
 import java.net.InetSocketAddress;
 
@@ -7,9 +9,8 @@ public class Main {
         int port = 8080;
         GameServer server = new GameServer(new InetSocketAddress(port));
         server.start();
-        System.out.println("[MAIN] Server iniciado");
+        System.out.println("[MAIN] Server iniciado en puerto " + port);
 
-        // Mantener vivo
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("[MAIN] Server apagado");
             try {
@@ -17,6 +18,7 @@ public class Main {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            DatabaseManager.shutdown();
         }));
     }
 }

@@ -7,7 +7,8 @@ public class LoginMessage extends Message {
     private String username;
     private String password; // En producción: hash, no texto plano
     private String token;    // Para re-conexión con sesión existente
-    
+    private boolean register;
+
     public LoginMessage() {
         super(MessageType.LOGIN_REQUEST);
     }
@@ -16,6 +17,13 @@ public class LoginMessage extends Message {
         this();
         this.username = username;
         this.password = password;
+    }
+
+    public LoginMessage(String username, String password, boolean register) {
+        this();
+        this.username = username;
+        this.password = password;
+        this.register = register;
     }
     
     public String getUsername() { return username; }
@@ -26,4 +34,7 @@ public class LoginMessage extends Message {
     
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
+
+    public boolean isRegister() { return register; }
+    public void setRegister(boolean register) { this.register = register; }
 }

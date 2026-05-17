@@ -9,6 +9,8 @@ import com.aa.server.network.ConnectionManager;
 import com.aa.server.room.Room;
 import com.aa.server.room.RoomManager;
 import com.aa.server.room.RoomStatus;
+import com.aa.server.db.DatabaseManager;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,11 @@ class GameFlowIntegrationTest {
     private GameInstanceManager gameInstanceManager;
     private ConnectionManager connectionManager;
     private MessageHandler handler;
+
+    @BeforeAll
+    static void initDb() {
+        DatabaseManager.initForTest();
+    }
 
     @BeforeEach
     void setUp() {
@@ -77,7 +84,8 @@ class GameFlowIntegrationTest {
         Room room = roomManager.getRoom(roomId);
         assertEquals(2, room.getPlayerCount());
 
-        // 5. Host inicia partida
+        // 5. Host inicia partida (necesitamos que getCurrentRoomId devuelva el roomId)
+        when(host.getCurrentRoomId()).thenReturn(roomId);
         handler.handle(host, "{\"type\":\"GAME_START\"}");
         assertEquals(RoomStatus.PLAYING, room.getStatus());
 

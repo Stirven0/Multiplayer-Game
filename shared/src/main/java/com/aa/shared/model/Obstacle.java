@@ -1,6 +1,4 @@
-package com.aa.server.game.map;
-
-import com.aa.shared.model.Vector2;
+package com.aa.shared.model;
 
 public record Obstacle(double x, double y, double width, double height) {
     public boolean contains(Vector2 point) {
@@ -9,7 +7,6 @@ public record Obstacle(double x, double y, double width, double height) {
     }
 
     public boolean intersectsCircle(Vector2 center, double radius) {
-        // AABB vs Circle simplificado
         double closestX = clamp(center.x(), x, x + width);
         double closestY = clamp(center.y(), y, y + height);
         double dx = center.x() - closestX;
@@ -17,7 +14,7 @@ public record Obstacle(double x, double y, double width, double height) {
         return (dx * dx + dy * dy) < (radius * radius);
     }
 
-    private double clamp(double val, double min, double max) {
+    private static double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
 }

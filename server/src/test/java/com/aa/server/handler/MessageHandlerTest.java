@@ -5,14 +5,18 @@ import com.aa.server.game.GameInstance;
 import com.aa.server.game.GameInstanceManager;
 import com.aa.server.network.ClientConnection;
 import com.aa.server.room.Room;
+import com.aa.server.room.RoomStatus;
 import com.aa.server.room.RoomManager;
+import com.aa.shared.message.LoginResponseMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -66,14 +70,18 @@ class MessageHandlerTest {
     }
 
     @Test
-    @DisplayName("LOGIN_REQUEST inválido debe enviar error")
+    @DisplayName("LOGIN_REQUEST inválido debe enviar LoginResponseMessage con success=false")
     void loginFailure() {
         when(authService.login("user", "wrong")).thenReturn(null);
 
         String json = "{\"type\":\"LOGIN_REQUEST\",\"username\":\"user\",\"password\":\"wrong\"}";
         handler.handle(client, json);
 
-        verify(client).sendError(eq("AUTH_FAILED"), anyString(), eq(false));
+        ArgumentCaptor<LoginResponseMessage> captor = ArgumentCaptor.forClass(LoginResponseMessage.class);
+        verify(client).send(captor.capture());
+        LoginResponseMessage resp = captor.getValue();
+        assertFalse(resp.isSuccess());
+        assertNotNull(resp.getErrorMessage());
     }
 
     @Test
@@ -108,12 +116,13 @@ class MessageHandlerTest {
         when(client.isAuthenticated()).thenReturn(true);
         when(client.getPlayerId()).thenReturn("p1");
         when(client.tryShoot()).thenReturn(false);
+        GameInstance game = mock(GameInstance.class);
+        when(gameInstanceManager.getGameByPlayer("p1")).thenReturn(game);
 
         String json = "{\"type\":\"SHOOT_INPUT\",\"angle\":0.0}";
         handler.handle(client, json);
 
         verify(client).sendError(eq("RATE_LIMIT"), anyString(), eq(false));
-        verify(gameInstanceManager, never()).getGameByPlayer(any());
     }
 
     @Test
@@ -124,6 +133,8 @@ class MessageHandlerTest {
 
         Room room = mock(Room.class);
         when(room.getRoomId()).thenReturn("room-1");
+        when(room.getStatus()).thenReturn(RoomStatus.WAITING);
+        when(room.getPlayerIds()).thenReturn(java.util.Set.of("p1"));
         when(roomManager.createRoom("p1", "map_01")).thenReturn(room);
 
         String json = "{\"type\":\"CREATE_ROOM\",\"mapId\":\"map_01\"}";

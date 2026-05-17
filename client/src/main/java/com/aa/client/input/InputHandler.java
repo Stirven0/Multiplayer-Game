@@ -15,9 +15,13 @@ public class InputHandler {
     private double mouseScreenX;
     private double mouseScreenY;
     private volatile boolean mousePressed;
+    private volatile boolean swapWeaponPressed;
 
     public void attach(Scene scene) {
-        scene.setOnKeyPressed(e -> keys.add(e.getCode()));
+        scene.setOnKeyPressed(e -> {
+            keys.add(e.getCode());
+            if (e.getCode() == KeyCode.Q) swapWeaponPressed = true;
+        });
         scene.setOnKeyReleased(e -> keys.remove(e.getCode()));
         scene.setOnMouseMoved(e -> {
             mouseScreenX = e.getX();
@@ -45,7 +49,6 @@ public class InputHandler {
         if (keys.contains(KeyCode.A) || keys.contains(KeyCode.LEFT)) dx -= 1;
         if (keys.contains(KeyCode.D) || keys.contains(KeyCode.RIGHT)) dx += 1;
 
-        // Normalizar
         double mag = Math.hypot(dx, dy);
         if (mag > 0) {
             dx /= mag;
@@ -64,9 +67,17 @@ public class InputHandler {
         mousePressed = false;
     }
 
-    /**
-     * Calcula ángulo del mouse respecto al jugador local en coordenadas de mundo.
-     */
+    public boolean consumeSwapWeapon() {
+        if (swapWeaponPressed) {
+            swapWeaponPressed = false;
+            return true;
+        }
+        return false;
+    }
+
+    public double getMouseScreenX() { return mouseScreenX; }
+    public double getMouseScreenY() { return mouseScreenY; }
+
     public double getShootAngle(Camera camera, Vector2 playerWorldPos) {
         double screenPlayerX = camera.worldToScreenX(playerWorldPos.x());
         double screenPlayerY = camera.worldToScreenY(playerWorldPos.y());

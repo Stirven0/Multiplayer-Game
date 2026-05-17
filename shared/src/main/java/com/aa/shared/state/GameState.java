@@ -1,8 +1,12 @@
 package com.aa.shared.state;
 
+import com.aa.shared.model.Obstacle;
 import com.aa.shared.model.Player;
 import com.aa.shared.model.Bullet;
+import com.aa.shared.model.WeaponPickup;
+import com.aa.shared.model.PowerUpPickup;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +32,15 @@ public class GameState {
     private GameStatus status;
     private long startTime;
     private long endTime;
+    
+    // Mapa
+    private List<Obstacle> obstacles = Collections.emptyList();
+    private double mapWidth;
+    private double mapHeight;
+    
+    // Pickups
+    private List<WeaponPickup> weaponPickups = Collections.emptyList();
+    private List<PowerUpPickup> powerUpPickups = Collections.emptyList();
     
     public enum GameStatus {
         WAITING,    // Esperando jugadores
@@ -101,11 +114,26 @@ public class GameState {
     public GameStatus getStatus() { return status; }
     public void setStatus(GameStatus status) { this.status = status; }
     
+    public List<Obstacle> getObstacles() { return obstacles; }
+    public void setObstacles(List<Obstacle> obstacles) { this.obstacles = obstacles; }
+
+    public double getMapWidth() { return mapWidth; }
+    public void setMapWidth(double mapWidth) { this.mapWidth = mapWidth; }
+
+    public double getMapHeight() { return mapHeight; }
+    public void setMapHeight(double mapHeight) { this.mapHeight = mapHeight; }
+
     public long getStartTime() { return startTime; }
     public void setStartTime(long startTime) { this.startTime = startTime; }
     
     public long getEndTime() { return endTime; }
     public void setEndTime(long endTime) { this.endTime = endTime; }
+    
+    public List<WeaponPickup> getWeaponPickups() { return weaponPickups; }
+    public void setWeaponPickups(List<WeaponPickup> weaponPickups) { this.weaponPickups = weaponPickups; }
+    
+    public List<PowerUpPickup> getPowerUpPickups() { return powerUpPickups; }
+    public void setPowerUpPickups(List<PowerUpPickup> powerUpPickups) { this.powerUpPickups = powerUpPickups; }
     
     /**
      * Crea una copia superficial del estado para serialización.
@@ -120,6 +148,11 @@ public class GameState {
         copy.status = this.status;
         copy.startTime = this.startTime;
         copy.endTime = this.endTime;
+        copy.obstacles = this.obstacles;
+        copy.mapWidth = this.mapWidth;
+        copy.mapHeight = this.mapHeight;
+        copy.weaponPickups = this.weaponPickups;
+        copy.powerUpPickups = this.powerUpPickups;
         
         // Copiar jugadores y balas
         for (Player p : this.players.values()) {
@@ -128,6 +161,13 @@ public class GameState {
             pCopy.setDirection(p.getDirection());
             pCopy.setHealth(p.getHealth());
             pCopy.setAlive(p.isAlive());
+            pCopy.setKills(p.getKills());
+            pCopy.setDeaths(p.getDeaths());
+            pCopy.setPrimaryWeapon(p.getPrimaryWeapon());
+            pCopy.setSecondaryWeapon(p.getSecondaryWeapon());
+            pCopy.setCurrentWeaponSlot(p.getCurrentWeaponSlot());
+            pCopy.setShield(p.getShield());
+            pCopy.setUpgradePoints(p.getUpgradePoints());
             copy.addPlayer(pCopy);
         }
         

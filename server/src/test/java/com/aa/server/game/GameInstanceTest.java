@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Set;
 
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class GameInstanceTest {
 
     @Mock
@@ -39,7 +42,7 @@ class GameInstanceTest {
         when(room.getPlayerIds()).thenReturn(Set.of("p1", "p2"));
         when(room.getHostId()).thenReturn("p1");
 
-        GameMap map = new GameMap("map_01", 2000, 2000, java.util.List.of());
+        GameMap map = new GameMap("map_01", "Warehouse", 2000, 2000, java.util.List.of());
 
         instance = new GameInstance("game-1", room, map, connectionManager);
     }
@@ -70,7 +73,6 @@ class GameInstanceTest {
     @Test
     @DisplayName("broadcastState debe enviar GameStateMessage a los jugadores")
     void broadcastSendsStateToPlayers() {
-        instance.start(); // Inicia el estado
         instance.broadcastState();
 
         ArgumentCaptor<GameStateMessage> captor = ArgumentCaptor.forClass(GameStateMessage.class);

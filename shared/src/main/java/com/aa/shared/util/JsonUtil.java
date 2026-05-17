@@ -137,10 +137,17 @@ public class JsonUtil {
                 case GAME_START -> Message.class; // o crear GameStartMessage
                 case MOVE_INPUT -> MoveMessage.class;
                 case SHOOT_INPUT -> ShootMessage.class;
+                case SWAP_WEAPON -> SwapWeaponMessage.class;
+                case BUFF_UPDATE -> BuffUpdateMessage.class;
                 case GAME_STATE -> GameStateMessage.class;
+                case GAME_END -> GameEndMessage.class;
                 case ERROR -> ErrorMessage.class;
                 case PING -> PingMessage.class;
                 case PONG -> PongMessage.class;
+                case ROOM_LIST_RESPONSE -> RoomListResponseMessage.class;
+                case RECONNECT -> ReconnectMessage.class;
+                case IDLE_WARNING -> IdleWarningMessage.class;
+                case KICKED_IDLE -> KickedIdleMessage.class;
                 default -> throw new JsonParseException(
                     "Tipo de mensaje no mapeado a clase concreta: " + type
                 );

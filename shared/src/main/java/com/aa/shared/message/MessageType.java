@@ -15,29 +15,37 @@ public enum MessageType {
     JOIN_ROOM,
     LEAVE_ROOM,
     ROOM_LIST,
-    ROOM_CREATED,      // <-- NUEVO
-    ROOM_UPDATED,      // <-- NUEVO
+    ROOM_LIST_RESPONSE,
+    ROOM_CREATED,
+    ROOM_UPDATED,
     ROOM_UPDATE,
-    JOIN_ROOM_RESPONSE,// <-- NUEVO
+    JOIN_ROOM_RESPONSE,
     GAME_START,
     
     // Inputs del jugador (Cliente → Servidor)
     MOVE_INPUT,      // Movimiento continuo
     SHOOT_INPUT,     // Disparo
+    SWAP_WEAPON,     // Cambiar arma primaria/secundaria
+    PICKUP,          // Recoger arma o power-up del mapa
     ROTATE_INPUT,    // Cambio de dirección
     USE_ABILITY,     // Habilidad especial (futuro)
     
     // Estado del juego (Servidor → Cliente)
     GAME_STATE,      // Snapshot completo
+    BUFF_UPDATE,     // Actualización de buffs/debuffs activos
     DELTA_STATE,     // Cambios parciales (futuro)
     ENTITY_SPAWN,    // Nueva entidad creada
     ENTITY_DESTROY,  // Entidad eliminada
     PLAYER_HIT,      // Jugador dañado
     PLAYER_DEATH,    // Jugador muerto
+    GAME_END,        // Partida terminada con resultados
     
     // Sistema
     PING,            // Latencia
     PONG,
     ERROR,           // Error genérico
-    DISCONNECT       // Desconexión forzada
+    DISCONNECT,      // Desconexión forzada
+    RECONNECT,       // Reconexión después de timeout
+    IDLE_WARNING,    // Advertencia de inactividad (countdown)
+    KICKED_IDLE      // Expulsado por inactividad
 }
