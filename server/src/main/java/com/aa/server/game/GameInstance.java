@@ -60,6 +60,7 @@ public class GameInstance {
         this.state.setObstacles(map.obstacles());
         this.state.setMapWidth(map.width());
         this.state.setMapHeight(map.height());
+        this.state.setTileMap(map.getTileMap());
         this.engine = new GameEngine();
 
         for (String playerId : room.getPlayerIds()) {

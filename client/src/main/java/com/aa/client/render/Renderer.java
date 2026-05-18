@@ -19,11 +19,13 @@ import javafx.scene.text.TextAlignment;
 
 public class Renderer {
     private final Camera camera;
+    private final TileRenderer tileRenderer;
     private boolean showDebug = false;
     private double fps = 0;
 
     public Renderer(Camera camera) {
         this.camera = camera;
+        this.tileRenderer = new TileRenderer(camera);
     }
 
     public void setShowDebug(boolean v) { this.showDebug = v; }
@@ -45,7 +47,11 @@ public class Renderer {
         }
 
         drawGrid(gc);
-        drawObstacles(gc, state.getObstacles());
+        if (state.getTileMap() != null) {
+            tileRenderer.render(gc, state.getTileMap(), cw, ch);
+        } else {
+            drawObstacles(gc, state.getObstacles());
+        }
         drawWeaponPickups(gc, state.getWeaponPickups());
         drawPowerUpPickups(gc, state.getPowerUpPickups());
 

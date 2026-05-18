@@ -11,7 +11,13 @@ public class MapManager {
     }
 
     private void loadDefaults() {
-        register(MapLoader.loadFromJson("/maps/map_01.json"));
+        // Try loading TMJ maps first, fall back to legacy JSON
+        try {
+            register(TiledMapLoader.loadFromTmj("/maps/map_01.tmj"));
+        } catch (Exception e) {
+            System.out.println("[MAP] No TMJ map found, loading legacy JSON: " + e.getMessage());
+            register(MapLoader.loadFromJson("/maps/map_01.json"));
+        }
         register(MapLoader.loadFromJson("/maps/map_02.json"));
         register(MapLoader.loadFromJson("/maps/map_03.json"));
         register(MapLoader.loadFromJson("/maps/map_04.json"));
