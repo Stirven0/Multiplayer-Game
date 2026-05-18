@@ -1,8 +1,9 @@
 # AGENTS.md — Multiplayer Shooter Game
 
 ## Branch workflow
-- Todo el trabajo en `develop`. Nunca commitear a `main`.
+- Rama principal `develop`. Nunca commitear a `main`.
 - Rama `mcp` para características experimentales de IA/MCP.
+- Rama `tile-engine` para tile engine con soporte Tiled .tmj.
 
 ## Quick start
 ```bash
@@ -17,7 +18,7 @@ python tools/load_test.py 5                 # stress test (5 bots)
 
 ## Test commands
 ```bash
-mvn test -pl server                         # 57 tests server
+mvn test -pl server                         # 58 tests server
 mvn test -pl server -Dtest="!*IntegrationTest"  # solo unitarias
 Xvfb :99 -ac -screen 0 1280x720x24 &       # iniciar display virtual
 DISPLAY=:99 mvn test -pl client             # 20 tests UI (requiere Xvfb)
@@ -35,6 +36,7 @@ mvn test -pl server,client                  # ambos módulos
 - **Upgrade System**: 5 niveles por kills acumulados en partida (2/5/9/14/20). Mejoras pasivas: daño, cadencia, velocidad, HP max, reducción daño. Persiste al morir.
 - **Player Skills (Activas)**: 6 tipos (DASH/SHIELD_BURST/HEAL/ADRENALINE/EMP/STEALTH), 2 slots por jugador, teclas E y F, cooldowns en HUD. Skills aleatorias al spawn.
 - **DB persistence**: Tabla `player_stats` (total_kills, total_deaths, total_wins, total_games, upgrade_points). Stats persistidos vía `DatabaseManager.savePlayerStats()` al terminar partida.
+- **Tile Engine**: Formato Tiled JSON (.tmj). TileMap en GameState se envía al cliente para renderizar. Tiles sólidos → Obstacles con horizontal run merging. Placeholders de color (TileColors) sin sprites aún.
 
 ## MCP Integration
 - **mcp-bridge module**: Standalone MCP server (stdio transport) que se conecta como bot al game server via WebSocket. Expone 7 tools para agentes IA.

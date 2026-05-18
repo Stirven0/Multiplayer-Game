@@ -48,6 +48,12 @@ mvn javafx:run -pl client
 java -jar mcp-bridge/target/mcp-bridge-1.0-SNAPSHOT.jar --username ai_player
 ```
 
+### Verify TMJ map loads correctly
+```bash
+# Check that TMJ parses without "No TMJ map found" in output
+mvn test -pl server 2>&1 | grep "TMJ map"
+```
+
 ### Clean everything
 ```bash
 mvn clean
