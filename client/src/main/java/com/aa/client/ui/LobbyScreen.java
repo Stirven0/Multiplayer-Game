@@ -217,6 +217,26 @@ public class LobbyScreen {
         });
     }
 
+    public String getErrorMessage() {
+        if (errorLabel != null && errorLabel.isVisible()) {
+            return errorLabel.getText();
+        }
+        return null;
+    }
+
+    public String getCurrentRoomId() {
+        if (roomInfoLabel != null && roomInfoLabel.getText() != null && roomInfoLabel.getText().contains("🆔")) {
+            String text = roomInfoLabel.getText();
+            int idx = text.indexOf(": ");
+            if (idx >= 0) return text.substring(idx + 2);
+        }
+        return null;
+    }
+
+    public List<RoomListResponseMessage.RoomInfo> getCachedRooms() {
+        return cachedRooms;
+    }
+
     public void updateRoomInfo(String roomId) {
         Platform.runLater(() -> {
             roomInfoLabel.setText("🆔 Sala: " + roomId);

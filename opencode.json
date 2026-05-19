@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "command": {
+    "build": {
+      "description": "Compilar todo el proyecto (shared → server → client → mcp-bridge)",
+      "template": "Ejecuta: mvn clean install -DskipTests"
+    },
+    "test-server": {
+      "description": "Tests del servidor (solo unitarias, sin integration)",
+      "template": "Ejecuta: mvn test -pl server -Dtest=\"!*IntegrationTest\""
+    },
+    "test-client": {
+      "description": "Tests UI del cliente",
+      "template": "Ejecuta: mvn test -pl client"
+    },
+    "run-server": {
+      "description": "Iniciar servidor WebSocket en puerto 8080",
+      "template": "Ejecuta: java -jar server/target/server-1.0-SNAPSHOT.jar"
+    },
+    "run-client": {
+      "description": "Iniciar cliente JavaFX",
+      "template": "Ejecuta: mvn javafx:run -pl client"
+    },
+    "launch-4-players": {
+      "description": "Iniciar 4 clientes en grid 2x2 controlados via MCP",
+      "template": "Primero asegura que el servidor esté corriendo en :8080. Luego habilita los 4 MCP servers en opencode.json: client-alpha, client-bravo, client-charlie, client-delta. Cada uno se registra automáticamente y se une a la partida. El host (alpha) crea la sala y arranca cuando haya ≥2 jugadores."
+    }
+  },
+  "mcp": {
+    "client-alpha": {
+      "type": "local",
+      "command": ["mvn", "-q", "javafx:run", "-pl", "client", "-Dexec.args=--mcp --username alpha --password pass --auto-register --auto-create --x 0 --y 0"],
+      "enabled": true
+    },
+    "client-bravo": {
+      "type": "local",
+      "command": ["mvn", "-q", "javafx:run", "-pl", "client", "-Dexec.args=--mcp --username bravo --password pass --auto-register --auto-join --x 820 --y 0"],
+      "enabled": true
+    },
+    "client-charlie": {
+      "type": "local",
+      "command": ["mvn", "-q", "javafx:run", "-pl", "client", "-Dexec.args=--mcp --username charlie --password pass --auto-register --auto-join --x 0 --y 500"],
+      "enabled": true
+    },
+    "client-delta": {
+      "type": "local",
+      "command": ["mvn", "-q", "javafx:run", "-pl", "client", "-Dexec.args=--mcp --username delta --password pass --auto-register --auto-join --x 820 --y 500"],
+      "enabled": true
+    }
+  }
+}

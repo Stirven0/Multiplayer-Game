@@ -119,7 +119,7 @@ public class GameScreen {
         if (gameClient.getScreenManager().getMcpServer() == null) {
             ClientMcpServer mcpServer = new ClientMcpServer(
                 gameClient, gameClient.getInputHandler(),
-                gameClient.getRenderer(), canvas);
+                gameClient.getRenderer(), canvas, stage);
             gameClient.getScreenManager().setMcpServer(mcpServer);
             mcpServer.start();
         }

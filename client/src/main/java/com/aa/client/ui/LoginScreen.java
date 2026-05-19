@@ -44,6 +44,20 @@ public class LoginScreen {
         });
     }
 
+    public String getErrorMessage() {
+        if (status != null) {
+            String text = status.getText();
+            String style = status.getStyle();
+            if (text != null && !text.isEmpty() && style != null && style.contains("#f85149")) {
+                return text;
+            }
+        }
+        return null;
+    }
+
+    public String getUsername() { return user != null ? user.getText() : null; }
+    public String getPassword() { return pass != null ? pass.getText() : null; }
+
     public Scene createScene(Stage stage) {
         VBox form = new VBox(12);
         form.setAlignment(Pos.CENTER);
